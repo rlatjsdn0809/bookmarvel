@@ -8,24 +8,21 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-/* Layout: one-screen tablet game. Home / lobby cards centered; in play, a square board (6x6 ring, centre = status) beside a score column, stacking on narrow screens. Single light "school paper" look shared with the booth leaflet. */
+/* Layout: one-screen tablet game. Home / lobby / ranking cards centered; in play, a square board (6x6 ring, centre = status) beside a score column, stacking on narrow screens. Single light "school paper" look shared with the booth leaflet. */
 :root {
   --paper: #F6F3EC;
   --card: #FFFFFF;
   --ink: #22304A;
   --ink-soft: #4A5568;
   --line: #D9D1C2;
-  --board: #EBDDC3;
   --board-edge: #4A4F5C;
   --gold: #F0B44C;
-  --teal: #4FB3A5;
   --sky: #7A98D4;
-  --coral: #E07B58;
-  --leaf: #86B96E;
   --p1: #D9553F;
   --p2: #2F6FD6;
   --p3: #3E9C4F;
   --p4: #E2A21B;
+  --coin: #C98A12;
   --ok: #2E7D4F;
   --ok-bg: #E3F3E8;
   --bad: #B83A2E;
@@ -36,7 +33,7 @@
 }
 html, body { height: 100%; }
 [hidden] { display: none !important; }
-body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; word-break: keep-all; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; word-break: keep-all; -webkit-tap-highlight-color: transparent; }
 * { box-sizing: border-box; }
 button { font-family: inherit; color: inherit; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
@@ -49,17 +46,19 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap
 .btn.gold { background: var(--gold); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn.small { font-size: 14px; padding: 6px 12px; min-height: 36px; border-radius: 10px; box-shadow: 0 2px 0 var(--ink); }
-.field { display: flex; flex-direction: column; gap: 6px; }
-.field label { font-weight: 700; font-size: 14px; }
-.field input { font-size: 18px; padding: 10px 14px; border: 2px solid var(--ink); border-radius: 12px; background: var(--card); min-height: 48px; width: 100%; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label, .lbl { font-weight: 700; font-size: 14px; }
+.field input, .field select { font-size: 18px; padding: 10px 12px; border: 2px solid var(--ink); border-radius: 12px; background: var(--card); min-height: 48px; width: 100%; font-family: inherit; color: var(--ink); }
+.idrow { display: grid; grid-template-columns: repeat(3, minmax(70px, 1fr)) minmax(140px, 2fr); gap: 10px; }
+@media (max-width: 560px) { .idrow { grid-template-columns: repeat(3, minmax(0, 1fr)); } .idrow .field:last-child { grid-column: 1 / -1; } }
 .seg { display: flex; flex-wrap: wrap; gap: 8px; }
 .seg button { border: 2px solid var(--ink); background: var(--card); border-radius: 999px; padding: 8px 16px; font-size: 15px; font-weight: 700; cursor: pointer; min-height: 44px; }
 .seg button[aria-pressed="true"] { background: var(--ink); color: #FFFFFF; }
 .note { font-size: 13px; color: var(--ink-soft); }
-.err { color: var(--bad); font-weight: 700; font-size: 14px; min-height: 1.5em; }
+.err { color: var(--bad); font-weight: 700; font-size: 14px; min-height: 1.5em; margin: 0; }
 
 /* Home */
-.home { display: grid; gap: 20px; max-width: 920px; margin: 0 auto; }
+.home { display: grid; gap: 18px; max-width: 920px; margin: 0 auto; }
 .hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; padding-top: 8px; }
 .hero h1 { font-size: clamp(44px, 9vw, 76px); line-height: 1; }
 .hero p { margin: 8px 0 0; font-size: 17px; color: var(--ink-soft); }
@@ -67,16 +66,17 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap
 .shelf span { display: block; width: 18px; border-radius: 3px 3px 0 0; border: 2px solid var(--ink); border-bottom: none; }
 .home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
 .panel { background: var(--card); border: 2px solid var(--ink); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel.soft { border-color: var(--line); }
 .panel h2 { font-size: 26px; }
 .rules ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
-.code-input { letter-spacing: .3em; text-align: center; font-family: var(--display); font-size: 26px !important; }
+.code-input { letter-spacing: .3em; text-align: center; font-family: var(--display) !important; font-size: 26px !important; }
 
 /* Lobby */
 .lobby { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
 .roomcode { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .roomcode .num { font-family: var(--display); font-size: clamp(48px, 12vw, 80px); letter-spacing: .12em; line-height: 1; }
 .slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-.slot { border: 2px dashed var(--line); border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 10px; min-height: 64px; color: var(--ink-soft); }
+.slot { border: 2px dashed var(--line); border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 10px; min-height: 64px; color: var(--ink-soft); flex-wrap: wrap; }
 .slot.filled { border-style: solid; border-color: var(--ink); color: var(--ink); background: var(--card); font-weight: 700; }
 .token { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ink); display: inline-flex; align-items: center; justify-content: center; font-family: var(--display); color: #FFFFFF; font-size: 15px; line-height: 1; }
 .me-tag { font-size: 12px; background: var(--ink); color: #FFFFFF; padding: 1px 8px; border-radius: 999px; font-weight: 700; }
@@ -88,27 +88,32 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap
 .chip { border: 2px solid var(--ink); border-radius: 999px; padding: 3px 12px; font-weight: 700; font-size: 14px; background: var(--card); font-variant-numeric: tabular-nums; }
 .chip.timer { font-family: var(--display); font-size: 20px; padding: 0 14px; }
 .chip.timer.low { background: var(--bad); color: #FFFFFF; border-color: var(--bad); }
-.game { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 16px; align-items: start; }
+.game { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
 @media (max-width: 880px) { .game { grid-template-columns: minmax(0, 1fr); } }
 .board-wrap { display: flex; justify-content: center; min-width: 0; }
 .board { container-type: inline-size; width: min(100%, calc(100vh - 120px)); min-width: 280px; aspect-ratio: 1; max-width: 100%; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr)); gap: 3px; padding: 8px; background: var(--board-edge); border-radius: 16px; position: relative; }
-.cell { background: var(--card); border-radius: 6px; position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 4px 5px; font-size: max(9px, 2cqw); line-height: 1.2; min-width: 0; }
-.cell .band { position: absolute; inset: 0 0 auto 0; height: 18%; background: #CBBFA8; }
-.cell .title { position: relative; margin-top: 20%; font-weight: 700; }
-.cell .val { position: relative; margin-top: auto; font-size: max(8px, 1.7cqw); color: var(--ink-soft); font-weight: 700; }
-.cell .own { position: absolute; top: 3px; right: 4px; width: max(14px, 3cqw); height: max(14px, 3cqw); border-radius: 50%; border: 1.5px solid var(--ink); color: #FFFFFF; font-family: var(--display); font-size: max(8px, 1.7cqw); display: flex; align-items: center; justify-content: center; }
-.cell.owned .band { height: 22%; }
+.cell { background: var(--card); border-radius: 6px; position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 4px 5px; font-size: max(9px, 1.9cqw); line-height: 1.2; min-width: 0; }
+.cell .band { position: absolute; inset: 0 0 auto 0; height: 16%; background: #CBBFA8; }
+.cell .title { position: relative; margin-top: 18%; font-weight: 700; }
+.cell .val { position: relative; margin-top: auto; font-size: max(8px, 1.6cqw); color: var(--ink-soft); font-weight: 700; }
+.cell .lv { position: relative; display: flex; gap: 2px; margin-top: 2px; }
+.cell .lv i { width: max(6px, 1.4cqw); height: max(6px, 1.4cqw); border: 1.2px solid var(--ink); border-radius: 2px; background: #FFFFFF; }
+.cell .lv i.on { background: var(--gold); }
+.cell.landmark { box-shadow: inset 0 0 0 3px var(--gold); }
+.cell .mark-lm { position: relative; font-family: var(--display); font-size: max(8px, 1.6cqw); color: var(--coin); }
+.cell .prog { position: absolute; top: 2px; right: 3px; display: flex; gap: 2px; }
+.cell .prog span { min-width: max(13px, 2.8cqw); height: max(13px, 2.8cqw); border-radius: 999px; border: 1.2px solid var(--ink); color: #FFFFFF; font-family: var(--display); font-size: max(8px, 1.6cqw); display: flex; align-items: center; justify-content: center; padding: 0 2px; }
 .cell.corner { background: #FBF7EE; align-items: center; justify-content: center; text-align: center; padding: 4px; }
-.cell.corner .title { margin: 0; font-family: var(--display); font-weight: 400; font-size: max(11px, 2.7cqw); }
+.cell.corner .title { margin: 0; font-family: var(--display); font-weight: 400; font-size: max(11px, 2.6cqw); }
 .cell.corner .val { margin: 2px 0 0; }
 .cell.c-start { background: #E8F1E2; }
 .cell.c-bell { background: #FFF3D6; }
 .cell.c-late { background: #FBE6E3; }
 .cell.c-rest { background: #E6EFF8; }
 .cell.card { background: #F3EEF8; align-items: center; justify-content: center; text-align: center; }
-.cell.card .title { margin: 0; font-family: var(--display); font-weight: 400; font-size: max(10px, 2.3cqw); }
-.cell.card .mark { width: 34%; aspect-ratio: .7; background: #8C6BB1; border: 1.5px solid var(--ink); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); margin-bottom: 4px; }
-.cell.here { box-shadow: inset 0 0 0 3px var(--ink); }
+.cell.card .title { margin: 0; font-family: var(--display); font-weight: 400; font-size: max(10px, 2.2cqw); }
+.cell.card .mark { width: 32%; aspect-ratio: .7; background: #8C6BB1; border: 1.5px solid var(--ink); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); margin-bottom: 4px; }
+.cell.here { outline: 3px solid var(--ink); outline-offset: -3px; }
 .tokens { position: absolute; left: 3px; right: 3px; bottom: 3px; display: flex; flex-wrap: wrap; gap: 2px; justify-content: flex-end; }
 .tokens .token { width: max(16px, 3.6cqw); height: max(16px, 3.6cqw); font-size: max(9px, 2cqw); border-width: 1.5px; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
 .center { grid-row: 2 / 6; grid-column: 2 / 6; background: #F8F2E6; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: max(8px, 1.6cqw); padding: 12px; text-align: center; min-width: 0; }
@@ -124,9 +129,10 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap
 .scores { display: grid; gap: 8px; }
 .score { display: flex; align-items: center; gap: 10px; background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; }
 .score.active { border-color: var(--ink); box-shadow: 0 3px 0 var(--ink); }
+.score.out { opacity: .55; }
 .score .nm { font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
-.score .pts { margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
-.score .pts b { font-family: var(--display); font-size: 24px; font-weight: 400; }
+.score .pts { margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.score .pts b { font-family: var(--display); font-size: 24px; font-weight: 400; color: var(--coin); }
 .score .pts small { display: block; color: var(--ink-soft); font-size: 12px; }
 .tag { font-size: 11px; border-radius: 999px; padding: 0 7px; background: var(--bad-bg); color: var(--bad); font-weight: 700; }
 .log { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; font-size: 13px; }
@@ -137,10 +143,12 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap
 
 /* Overlay */
 .overlay { position: fixed; inset: 0; background: rgba(34, 48, 74, .45); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
-.modal { background: var(--card); border: 3px solid var(--ink); border-radius: 22px; width: min(640px, 100%); max-height: 100%; overflow: auto; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 8px 0 rgba(34,48,74,.35); }
+.modal { background: var(--card); border: 3px solid var(--ink); border-radius: 22px; width: min(660px, 100%); max-height: 100%; overflow: auto; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 8px 0 rgba(34,48,74,.35); }
 .modal .head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .modal .kind { font-family: var(--display); font-size: 22px; }
 .cat { font-size: 13px; font-weight: 700; border-radius: 999px; padding: 2px 10px; background: #EFE7D6; }
+.stake { border-radius: 12px; padding: 8px 12px; background: #FFF6E3; font-weight: 700; font-size: 14px; }
+.stake.pay { background: var(--bad-bg); color: var(--bad); }
 .modal .q { font-size: clamp(19px, 3.4vw, 25px); font-weight: 700; line-height: 1.45; }
 .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 @media (max-width: 520px) { .choices { grid-template-columns: minmax(0, 1fr); } }
@@ -154,17 +162,31 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap
 .verdict.ok { background: var(--ok-bg); color: var(--ok); }
 .verdict.no { background: var(--bad-bg); color: var(--bad); }
 .verdict p { margin: 4px 0 0; color: var(--ink); font-weight: 500; font-size: 14px; }
-.waiting { color: var(--ink-soft); font-weight: 700; text-align: center; }
-.bookmark { align-self: center; width: 160px; padding: 22px 16px 46px; background: #8C6BB1; color: #FFFFFF; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 86%, 0 100%); text-align: center; font-family: var(--display); font-size: 22px; line-height: 1.3; }
-.big-msg { font-size: 20px; font-weight: 700; text-align: center; }
+.waiting { color: var(--ink-soft); font-weight: 700; text-align: center; margin: 0; }
+.bookmark { align-self: center; width: 170px; padding: 22px 16px 46px; background: #8C6BB1; color: #FFFFFF; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 86%, 0 100%); text-align: center; font-family: var(--display); font-size: 21px; line-height: 1.3; }
+.big-msg { font-size: 20px; font-weight: 700; text-align: center; margin: 0; }
+.bankrupt { font-family: var(--display); font-size: 44px; color: var(--bad); text-align: center; }
 .rank { display: grid; gap: 8px; }
-.rank-row { display: flex; align-items: center; gap: 12px; border: 2px solid var(--line); border-radius: 14px; padding: 10px 14px; }
+.rank-row { display: flex; align-items: center; gap: 12px; border: 2px solid var(--line); border-radius: 14px; padding: 10px 14px; flex-wrap: wrap; }
 .rank-row.first { border-color: var(--ink); background: #FFF6E3; }
-.medal { font-family: var(--display); font-size: 22px; width: 44px; text-align: center; }
-.rank-row .pts { margin-left: auto; font-family: var(--display); font-size: 24px; }
+.medal { font-family: var(--display); font-size: 22px; width: 52px; text-align: center; }
+.rank-row .pts { margin-left: auto; text-align: right; }
+.rank-row .pts b { font-family: var(--display); font-size: 22px; font-weight: 400; }
+.wl { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 1px 8px; }
+.wl.w { background: var(--ok-bg); color: var(--ok); }
+.wl.l { background: var(--bad-bg); color: var(--bad); }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+
+/* Ranking */
+.ranking { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
+.table-wrap { overflow-x: auto; }
+table.lb { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.lb th, table.lb td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+table.lb th { font-size: 13px; color: var(--ink-soft); }
+table.lb th:nth-child(2), table.lb td:nth-child(2) { text-align: left; white-space: normal; }
+table.lb td:first-child { font-family: var(--display); font-size: 20px; text-align: center; }
+table.lb tr.top td { background: #FFF6E3; }
 @media (prefers-reduced-motion: reduce) { .dice.rolling { animation: none; } .btn { transition: none; } }
-body { margin: 0; }
 </style>
 </head>
 <body>
@@ -174,7 +196,7 @@ body { margin: 0; }
   <div class="hero">
     <div>
       <h1>청소 책마블</h1>
-      <p>주사위를 굴려 동화책 보드판을 돌고, 책과 우리말 퀴즈를 맞혀 책을 모아요!</p>
+      <p>퀴즈를 맞혀 동화책 땅을 점령하고, 코인을 모아 독서왕이 되어 보세요!</p>
     </div>
     <div class="shelf" aria-hidden="true">
       <span style="height:70px;background:#D9553F"></span><span style="height:84px;background:#2F6FD6"></span><span style="height:62px;background:#F0B44C"></span><span style="height:78px;background:#3E9C4F"></span><span style="height:56px;background:#7A98D4"></span><span style="height:88px;background:#E07B58"></span><span style="height:66px;background:#4FB3A5"></span>
@@ -182,17 +204,23 @@ body { margin: 0; }
   </div>
 
   <div class="panel">
-    <div class="field">
-      <label for="nameInput">내 이름 (6글자까지)</label>
-      <input id="nameInput" maxlength="6" autocomplete="off" placeholder="예: 김청소">
+    <div>
+      <h2>나는 누구?</h2>
+      <p class="note" style="margin:4px 0 0">학년·반·번호·이름으로 승패 기록이 쌓여요. 매번 똑같이 적어 주세요.</p>
+    </div>
+    <div class="idrow">
+      <div class="field"><label for="gInput">학년</label><select id="gInput"><option value="">-</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+      <div class="field"><label for="cInput">반</label><input id="cInput" inputmode="numeric" maxlength="2" autocomplete="off" placeholder="1"></div>
+      <div class="field"><label for="nInput">번호</label><input id="nInput" inputmode="numeric" maxlength="2" autocomplete="off" placeholder="12"></div>
+      <div class="field"><label for="nameInput">이름</label><input id="nameInput" maxlength="6" autocomplete="off" placeholder="예: 김청소"></div>
     </div>
     <div class="home-grid">
-      <div class="panel" style="border-color: var(--line)">
+      <div class="panel soft">
         <h2>방 만들기</h2>
-        <p class="note" style="margin:0">방 번호가 생겨요. 친구들은 같은 링크에서 그 번호로 들어와요.</p>
+        <p class="note" style="margin:0">방 번호가 생겨요. 친구들은 같은 주소에서 그 번호로 들어와요.</p>
         <button id="btnCreate" class="btn primary" type="button" disabled>방 만들기</button>
       </div>
-      <div class="panel" style="border-color: var(--line)">
+      <div class="panel soft">
         <h2>방 들어가기</h2>
         <div class="field">
           <label for="codeInput">방 번호 4자리</label>
@@ -207,19 +235,45 @@ body { margin: 0; }
 
   <div class="home-grid">
     <div class="panel">
+      <h2>독서왕 랭킹</h2>
+      <p class="note" style="margin:0">지금까지 쌓인 승리 기록으로 순위를 봐요.</p>
+      <button id="btnRank" class="btn gold" type="button">랭킹 보기</button>
+    </div>
+    <div class="panel">
       <h2>한 기기로 하기</h2>
-      <p class="note" style="margin:0">태블릿 한 대를 돌려 가며 2~4명이 함께 해요. 인터넷 연결이나 로그인이 없어도 돼요.</p>
-      <button id="btnLocal" class="btn gold" type="button">한 기기로 시작하기</button>
+      <p class="note" style="margin:0">태블릿 한 대를 돌려 가며 2~4명이 함께 해요. 이 모드는 랭킹 기록에 남지 않아요.</p>
+      <button id="btnLocal" class="btn" type="button">한 기기로 시작하기</button>
     </div>
-    <div class="panel rules">
-      <h2>이렇게 놀아요</h2>
-      <ol>
-        <li>차례가 되면 주사위를 굴려 칸을 이동해요.</li>
-        <li>동화책 칸에서 퀴즈를 맞히면 그 책을 모아 점수를 얻어요.</li>
-        <li>친구의 책 칸에 가면 책 주인이 1점! 퀴즈를 맞히면 나도 1점!</li>
-        <li>정해진 시간이 끝나면 점수가 가장 높은 사람이 독서왕이에요.</li>
-      </ol>
+  </div>
+
+  <div class="panel rules">
+    <h2>이렇게 놀아요</h2>
+    <ol>
+      <li>모두 <b>12코인</b>으로 시작해요. 출발 칸을 지날 때마다 <b>3코인</b>을 받아요.</li>
+      <li>빈 동화책 칸에 서면 퀴즈 <b>2문제를 연달아</b> 풀어요. 둘 다 맞히면 <b>점령</b>! 하나만 맞히면 다음에 왔을 때 한 문제만 더 맞히면 돼요.</li>
+      <li>내 칸에서 또 맞히면 <b>레벨 업</b>. 레벨 3은 아무도 못 빼앗는 <b>랜드마크</b>예요.</li>
+      <li>친구 칸에 서면 <b>통행료</b>(칸에 적힌 코인)를 내요. 그다음 퀴즈를 맞히면 그 칸 레벨이 1 내려가고, 0이 되면 내 땅!</li>
+      <li>통행료를 낼 코인이 모자라면 <b>파산</b>해서 빠져요. 마지막까지 남거나, 시간이 끝났을 때 <b>자산(코인 + 땅값)</b>이 가장 많은 사람이 이겨요.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="s-rank" class="ranking" aria-label="랭킹" hidden>
+  <div class="topbar"><span class="brand">독서왕 랭킹</span><button id="btnRankBack" class="btn small" type="button">처음으로</button></div>
+  <div class="panel">
+    <div class="seg" id="rankFilter">
+      <button type="button" data-f="all" aria-pressed="true">전체</button>
+      <button type="button" data-f="low" aria-pressed="false">1~2학년</button>
+      <button type="button" data-f="mid" aria-pressed="false">3~4학년</button>
+      <button type="button" data-f="high" aria-pressed="false">5~6학년</button>
     </div>
+    <div class="table-wrap">
+      <table class="lb">
+        <thead><tr><th scope="col">순위</th><th scope="col">이름</th><th scope="col">승</th><th scope="col">패</th><th scope="col">승률</th><th scope="col">판</th></tr></thead>
+        <tbody id="rankBody"><tr><td colspan="6" class="note" style="text-align:center">불러오는 중…</td></tr></tbody>
+      </table>
+    </div>
+    <p class="note" style="margin:0">순위는 승리 수, 승률, 판 수 순서로 정해요. 1등을 하면 1승, 나머지는 1패예요.</p>
   </div>
 </section>
 
@@ -240,7 +294,7 @@ body { margin: 0; }
   <div class="panel">
     <div class="roomcode">
       <div><div class="note">방 번호</div><div class="num" id="lobbyCode">----</div></div>
-      <p class="note" style="max-width: 300px; margin: 0">친구들은 같은 게임 링크를 열고 <b>방 들어가기</b>에 이 번호를 넣어요. 최대 4명까지 들어올 수 있어요.</p>
+      <p class="note" style="max-width: 300px; margin: 0">친구들은 같은 주소를 열고 <b>방 들어가기</b>에 이 번호를 넣어요. 최대 4명까지 들어올 수 있어요.</p>
     </div>
     <div class="slots" id="lobbySlots"></div>
   </div>
@@ -275,7 +329,7 @@ body { margin: 0; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-/* Firebase 콘솔 > 프로젝트 설정 > 내 앱 > SDK 설정 및 구성(firebaseConfig) 값을 그대로 넣으세요. */
+/* Firebase 콘솔 > 프로젝트 설정 > 내 앱 > SDK 설정 및 구성(firebaseConfig) 값 */
 window.BOOKMARVEL_FIREBASE = {
   apiKey: "AIzaSyD-osf_Dl7wsd6v53UwkT-39eSCkj-H8Zs",
   authDomain: "bookmarvel-42c00.firebaseapp.com",
@@ -290,31 +344,39 @@ window.BOOKMARVEL_FIREBASE = {
 (function () {
 'use strict';
 
+/* ---------- Rules ---------- */
+var START_COINS = 12;   // 시작 코인
+var SALARY = 3;         // 출발 칸 지날 때
+var NEED = 2;           // 빈 칸 점령에 필요한 정답 수 (한 번 방문에 연속 도전)
+var MAXLV = 3;          // 레벨 3 = 랜드마크
+var TOLL_MULT = 3;      // 통행료 = 칸 가격 × 레벨 × 3
+var BELL = 5, REST = 2, LATE_FEE = 2;
+
 /* ---------- Board ---------- */
 var BOARD = [
-  { t: 'start', name: '출발', sub: '지나가면 +2점' },
+  { t: 'start', name: '출발', sub: '지나가면 +3코인' },
   { t: 'book', key: 'heungbu', name: '흥부와 놀부', v: 2 },
   { t: 'book', key: 'sunmoon', name: '해님 달님', v: 2 },
   { t: 'card' },
   { t: 'book', key: 'turtle', name: '토끼와 거북이', v: 2 },
-  { t: 'rest', name: '도서관 쉼터', sub: '+1점' },
+  { t: 'rest', name: '도서관 쉼터', sub: '+2코인' },
   { t: 'book', key: 'pigs', name: '아기 돼지 삼 형제', v: 2 },
   { t: 'book', key: 'axe', name: '금도끼 은도끼', v: 2 },
   { t: 'card' },
   { t: 'book', key: 'kongjwi', name: '콩쥐팥쥐', v: 3 },
-  { t: 'bell', name: '독서 골든벨', sub: '맞히면 +3점' },
+  { t: 'bell', name: '독서 골든벨', sub: '맞히면 +5코인' },
   { t: 'book', key: 'rabbit', name: '별주부전', v: 3 },
   { t: 'book', key: 'pinocchio', name: '피노키오', v: 3 },
   { t: 'card' },
   { t: 'book', key: 'simcheong', name: '심청전', v: 3 },
-  { t: 'late', name: '반납 연체', sub: '한 번 쉬어요' },
+  { t: 'late', name: '반납 연체', sub: '-2코인, 한 번 쉬기' },
   { t: 'book', key: 'hansel', name: '헨젤과 그레텔', v: 3 },
   { t: 'book', key: 'gyeonwoo', name: '견우와 직녀', v: 4 },
   { t: 'card' },
   { t: 'book', key: 'ant', name: '개미와 베짱이', v: 4 }
 ];
 var N = BOARD.length;
-function rc(i) { // grid row/col (1-based) for ring index, clockwise from bottom-right
+function rc(i) {
   if (i <= 5) return [6, 6 - i];
   if (i <= 10) return [6 - (i - 5), 1];
   if (i <= 15) return [1, 1 + (i - 10)];
@@ -325,7 +387,6 @@ var LEVELS = { low: '1~2학년', mid: '3~4학년', high: '5~6학년' };
 
 /* ---------- Questions: c[0] is always the answer; shown shuffled ---------- */
 var Q = [
-  // 1~2학년
   { id: 'l1', lv: 'low', book: 'turtle', cat: '동화', q: '「토끼와 거북이」에서 달리기 경주에서 이긴 동물은?', c: ['거북이', '토끼', '여우', '곰'], ex: '토끼가 낮잠을 자는 동안 거북이가 쉬지 않고 걸어서 이겼어요.' },
   { id: 'l2', lv: 'low', book: 'heungbu', cat: '동화', q: '「흥부와 놀부」에서 흥부가 다친 다리를 고쳐 준 새는?', c: ['제비', '까치', '참새', '비둘기'], ex: '제비는 고마움의 표시로 박씨를 물어다 주었어요.' },
   { id: 'l3', lv: 'low', book: 'sunmoon', cat: '동화', q: '「해님 달님」에서 오누이를 쫓아온 동물은?', c: ['호랑이', '곰', '늑대', '여우'], ex: '오누이는 하늘에서 내려온 동아줄을 타고 올라가 해와 달이 되었어요.' },
@@ -348,7 +409,6 @@ var Q = [
   { id: 'l20', lv: 'low', cat: '도서관', q: '도서관에서 지켜야 할 약속은?', c: ['조용히 책 읽기', '뛰어다니기', '큰 소리로 노래하기', '책에 낙서하기'], ex: '도서관은 모두가 함께 쓰는 곳이라 조용히 해요.' },
   { id: 'l21', lv: 'low', cat: '도서관', q: '책의 맨 앞에서 책 이름과 그림이 있는 겉면을 무엇이라고 할까요?', c: ['표지', '차례', '쪽수', '책갈피'], ex: '책의 얼굴 같은 겉면이 ‘표지’예요.' },
   { id: 'l22', lv: 'low', cat: '낱말', q: '토끼가 뛰는 모양을 흉내 낸 말은?', c: ['깡충깡충', '엉금엉금', '주룩주룩', '반짝반짝'], ex: '‘엉금엉금’은 거북이가 기어가는 모양이에요.' },
-  // 3~4학년
   { id: 'm1', lv: 'mid', book: 'rabbit', cat: '동화', q: '「별주부전」에서 자라가 토끼를 데려가려고 한 곳은?', c: ['용궁', '달나라', '깊은 산속', '하늘나라'], ex: '자라는 용왕의 병을 고칠 토끼의 간을 구하러 갔어요.' },
   { id: 'm2', lv: 'mid', book: 'rabbit', cat: '동화', q: '「별주부전」에서 토끼가 용궁을 빠져나오려고 한 꾀는?', c: ['간을 육지에 두고 왔다고 말했다', '배가 아프다고 했다', '엄마가 기다린다고 했다', '길을 잃었다고 했다'], ex: '토끼는 간을 두고 왔다며 다시 육지로 돌아갔어요.' },
   { id: 'm3', lv: 'mid', book: 'simcheong', cat: '동화', q: '「심청전」에서 심청이가 공양미 삼백 석으로 고치려 한 것은?', c: ['아버지의 눈', '어머니의 병', '무너진 집', '부서진 배'], ex: '심청이는 앞을 못 보는 아버지의 눈을 뜨게 하고 싶었어요.' },
@@ -371,7 +431,6 @@ var Q = [
   { id: 'm20', lv: 'mid', cat: '높임말', q: '알맞은 말은? “할머니께서 진지를 ○○.”', c: ['드신다', '먹는다', '먹었니', '먹자'], ex: '어른께는 ‘드시다’, ‘잡수시다’를 써요.' },
   { id: 'm21', lv: 'mid', cat: '낱말', q: '소리를 흉내 낸 말은?', c: ['주룩주룩', '엉금엉금', '깡충깡충', '살금살금'], ex: '‘주룩주룩’은 비가 내리는 소리를 흉내 낸 말이에요.' },
   { id: 'm22', lv: 'mid', book: 'kongjwi', cat: '동화', q: '「콩쥐팥쥐」에서 콩쥐가 잃어버렸다가 원님을 만나게 된 물건은?', c: ['꽃신 한 짝', '머리핀', '부채', '목걸이'], ex: '잃어버린 꽃신 덕분에 콩쥐는 원님을 만났어요.' },
-  // 5~6학년
   { id: 'h1', lv: 'high', cat: '속담', q: '“소 잃고 외양간 고친다”의 뜻은?', c: ['일이 잘못된 뒤에 손을 써도 소용없다', '소를 잘 키워야 한다', '집은 자주 고쳐야 한다', '부지런히 일해야 한다'], ex: '미리 대비하는 것이 중요하다는 뜻이에요.' },
   { id: 'h2', lv: 'high', cat: '속담', q: '“등잔 밑이 어둡다”의 뜻은?', c: ['가까이 있는 것을 오히려 잘 모른다', '밤에는 불을 켜야 한다', '등잔은 위험하다', '어두운 곳을 조심해야 한다'], ex: '가까운 곳의 일을 더 모를 때 쓰는 말이에요.' },
   { id: 'h3', lv: 'high', cat: '관용 표현', q: '“발이 넓다”의 뜻은?', c: ['아는 사람이 많다', '발 크기가 크다', '걸음이 빠르다', '여행을 자주 간다'], ex: '사귀어 아는 사람이 많을 때 쓰는 말이에요.' },
@@ -399,44 +458,50 @@ var Q = [
 var QMAP = {}; Q.forEach(function (x) { QMAP[x.id] = x; });
 
 var CARDS = [
-  { id: 'help', text: '도서관 정리를 도왔어요!', fx: '+2점', pts: 2 },
-  { id: 'finish', text: '책 한 권을 끝까지 다 읽었어요!', fx: '+3점', pts: 3 },
-  { id: 'lateret', text: '반납일을 깜빡했어요.', fx: '-1점', pts: -1 },
+  { id: 'help', text: '도서관 정리를 도왔어요!', fx: '+3코인', coins: 3 },
+  { id: 'finish', text: '책 한 권을 끝까지 다 읽었어요!', fx: '+5코인', coins: 5 },
+  { id: 'wet', text: '빌린 책에 물을 쏟았어요.', fx: '-3코인', coins: -3 },
   { id: 'jump', text: '책 속 지름길을 찾았어요!', fx: '2칸 앞으로', move: 2 },
   { id: 'again', text: '독서 열정이 넘쳐요!', fx: '주사위 한 번 더', again: true },
-  { id: 'home', text: '책가방을 챙겨 출발 칸으로!', fx: '출발 칸으로 이동 +2점', toStart: true }
+  { id: 'home', text: '책가방을 챙겨 출발 칸으로!', fx: '출발 칸으로 이동 (+3코인)', toStart: true }
 ];
 var CMAP = {}; CARDS.forEach(function (x) { CMAP[x.id] = x; });
 
 /* ---------- Helpers ---------- */
 function $(id) { return document.getElementById(id); }
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
-function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 function rnd(n) { return Math.floor(Math.random() * n); }
 function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = rnd(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]; }); }
 function ssGet(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
 function ssSet(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
-function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 var OFFSET = 0; // server clock offset from Firebase, so every tablet shares one game timer
 function NOW() { return new Date().getTime() + OFFSET; }
 var CLIENT = ssGet('bm-client') || ('c' + new Date().getTime().toString(36) + Math.random().toString(36).slice(2, 8));
 ssSet('bm-client', CLIENT);
-function tokenHTML(i, label, small) {
-  return '<span class="token" style="background:' + COLORS[i % 4] + '" aria-hidden="true">' + esc(label || String(i + 1)) + '</span>';
-}
+function tokenHTML(i) { return '<span class="token" style="background:' + COLORS[i % 4] + '" aria-hidden="true">' + (i + 1) + '</span>'; }
+function coinTxt(n) { return n + '코인'; }
 
 /* ---------- Game engine (pure state transforms) ---------- */
+function sk(i) { return 's' + i; }                 // square key (keeps Firebase from turning maps into arrays)
+function getOwner(st, i) { return st.owners[sk(i)] || null; }
+function getProg(st, i, p) { var m = st.progress[sk(i)]; return m ? (m['p' + p] || 0) : 0; }
+function toll(i, lv) { return BOARD[i].v * lv * TOLL_MULT; }
+function landValue(st, p) { var s = 0; for (var k in st.owners) { var o = st.owners[k]; if (o.p === p) s += BOARD[+k.slice(1)].v * o.lv * 2; } return s; }
+function assets(st, p) { return st.players[p].coins + landValue(st, p); }
+function landsOf(st, p) { var c = 0; for (var k in st.owners) { if (st.owners[k].p === p) c++; } return c; }
+function activeCount(st) { return st.players.filter(function (p) { return !p.out; }).length; }
+
 function blankRoom(code, mode) {
-  return { v: 1, mode: mode, code: code, phase: 'lobby', players: [], level: 'mid', minutes: 10, owners: {}, turn: 0, turnSeq: 0, used: [], log: [], dice: null, q: null, card: null, notice: null, result: null, again: false, startedAt: 0, endsAt: 0, updatedAt: NOW(), createdAt: NOW() };
+  return { v: 2, mode: mode, code: code, phase: 'lobby', players: [], level: 'mid', minutes: 10, owners: {}, progress: {}, turn: 0, turnSeq: 0, used: [], log: [], dice: null, q: null, card: null, notice: null, result: null, again: false, outCount: 0, recorded: false, noRecord: false, startedAt: 0, endsAt: 0, updatedAt: NOW(), createdAt: NOW() };
 }
 function addLog(st, msg) { st.log.unshift(msg); if (st.log.length > 8) st.log.length = 8; }
 function startGame(st) {
-  st.players.forEach(function (p) { p.pos = 0; p.score = 0; p.skip = false; });
-  st.owners = {}; st.turn = 0; st.turnSeq = 1; st.used = []; st.log = []; st.dice = null; st.q = null; st.card = null; st.notice = null; st.result = null; st.again = false;
+  st.players.forEach(function (p) { p.pos = 0; p.coins = START_COINS; p.skip = false; p.out = false; p.outOrder = 0; });
+  st.owners = {}; st.progress = {}; st.turn = 0; st.turnSeq = 1; st.used = []; st.log = []; st.dice = null; st.q = null; st.card = null; st.notice = null; st.result = null; st.again = false;
+  st.outCount = 0; st.recorded = false; st.noRecord = false;
   st.startedAt = NOW(); st.endsAt = st.startedAt + st.minutes * 60000; st.phase = 'roll';
-  addLog(st, '게임 시작! ' + st.players[0].name + '부터 주사위를 굴려요.');
+  addLog(st, '게임 시작! 모두 ' + START_COINS + '코인으로 출발해요.');
   return st;
 }
 function pickQuestion(st, bookKey) {
@@ -449,78 +514,135 @@ function pickQuestion(st, bookKey) {
   return { id: q.id, order: shuffle([0, 1, 2, 3]) };
 }
 function moveBy(st, p, steps) {
-  var from = p.pos, to = (from + steps) % N;
-  if (from + steps >= N) { p.score += 2; addLog(st, p.name + ' 출발 칸을 지나 +2점'); }
-  p.pos = to;
+  var from = p.pos;
+  if (from + steps >= N) { p.coins += SALARY; addLog(st, p.name + ' 출발 칸을 지나 +' + SALARY + '코인'); }
+  p.pos = (from + steps) % N;
+}
+function goBankrupt(st, i) {
+  var p = st.players[i];
+  p.out = true; st.outCount += 1; p.outOrder = st.outCount; p.coins = 0; p.skip = false;
+  for (var k in st.owners) { if (st.owners[k].p === i) delete st.owners[k]; }
+  for (var k2 in st.progress) { delete st.progress[k2]['p' + i]; }
+  addLog(st, p.name + ' 파산! 가진 땅이 모두 빈 칸이 되었어요.');
+}
+function setQuiz(st, kind, note, step) {
+  var p = st.players[st.turn], sq = BOARD[p.pos];
+  var pq = pickQuestion(st, sq.key);
+  st.q = { id: pq.id, order: pq.order, kind: kind, sq: p.pos, note: note || '', step: step || 1 };
+  st.result = null;
+  st.phase = 'quiz';
+}
+/* After a result: a correct first answer in a claim challenge goes straight to the next question; otherwise the turn ends. */
+function afterResult(st) {
+  if (st.result && st.result.cont) { setQuiz(st, 'claim', '', (st.q.step || 1) + 1); return st; }
+  return finishTurn(st);
 }
 function doRoll(st, roll) {
-  var p = st.players[st.turn];
+  var me = st.turn, p = st.players[me];
   st.dice = { v: roll, seq: st.turnSeq };
   moveBy(st, p, roll);
-  var sq = BOARD[p.pos];
-  if (sq.t === 'book' || sq.t === 'bell') {
-    var pq = pickQuestion(st, sq.key);
-    st.q = { id: pq.id, order: pq.order, kind: sq.t, sq: p.pos };
-    st.phase = 'quiz';
+  var i = p.pos, sq = BOARD[i];
+  if (sq.t === 'book') {
+    var o = getOwner(st, i);
+    if (!o) { setQuiz(st, 'claim'); }
+    else if (o.p === me) {
+      if (o.lv >= MAXLV) { p.coins += 1; st.notice = { title: '내 랜드마크', text: '「' + sq.name + '」 랜드마크에서 쉬어 가요. +1코인' }; st.phase = 'notice'; }
+      else setQuiz(st, 'up');
+    } else {
+      var owner = st.players[o.p], fee = toll(i, o.lv);
+      if (p.coins < fee) {
+        owner.coins += p.coins;
+        st.notice = { title: '파산!', text: '통행료 ' + fee + '코인을 낼 수 없어요. 남은 코인을 ' + owner.name + '에게 주고 게임에서 빠져요.', bankrupt: true };
+        goBankrupt(st, me); st.phase = 'notice';
+      } else {
+        p.coins -= fee; owner.coins += fee;
+        addLog(st, p.name + ' → ' + owner.name + ' 통행료 ' + fee + '코인');
+        if (o.lv >= MAXLV) { st.notice = { title: '랜드마크 통행료', text: owner.name + '의 랜드마크라 통행료 ' + fee + '코인을 냈어요. 빼앗을 수 없는 칸이에요.' }; st.phase = 'notice'; }
+        else setQuiz(st, 'attack', '통행료 ' + fee + '코인을 ' + owner.name + '에게 냈어요.');
+      }
+    }
+  } else if (sq.t === 'bell') {
+    setQuiz(st, 'bell');
   } else if (sq.t === 'card') {
     var c = CARDS[rnd(CARDS.length)];
     st.card = { id: c.id };
-    if (c.pts) { p.score = Math.max(0, p.score + c.pts); }
+    if (c.coins) { p.coins = Math.max(0, p.coins + c.coins); }
     if (c.move) { moveBy(st, p, c.move); }
     if (c.toStart) { moveBy(st, p, N - p.pos); }
     if (c.again) { st.again = true; }
     addLog(st, p.name + ' 책갈피 카드: ' + c.text + ' (' + c.fx + ')');
     st.phase = 'card';
   } else if (sq.t === 'rest') {
-    p.score += 1; st.notice = { title: '도서관 쉼터', text: '책 냄새를 맡으며 쉬어요. +1점' }; addLog(st, p.name + ' 도서관 쉼터에서 +1점'); st.phase = 'notice';
+    p.coins += REST; st.notice = { title: '도서관 쉼터', text: '책 냄새를 맡으며 쉬어요. +' + REST + '코인' }; addLog(st, p.name + ' 도서관 쉼터 +' + REST + '코인'); st.phase = 'notice';
   } else if (sq.t === 'late') {
-    p.skip = true; st.notice = { title: '반납 연체', text: '책을 늦게 반납했어요. 다음 차례에 한 번 쉬어요.' }; addLog(st, p.name + ' 반납 연체! 다음에 한 번 쉬어요'); st.phase = 'notice';
+    p.coins = Math.max(0, p.coins - LATE_FEE); p.skip = true;
+    st.notice = { title: '반납 연체', text: '연체료 ' + LATE_FEE + '코인을 내고, 다음 차례에 한 번 쉬어요.' }; addLog(st, p.name + ' 반납 연체! -' + LATE_FEE + '코인, 한 번 쉬기'); st.phase = 'notice';
   } else {
     st.notice = { title: '출발', text: '출발 칸에 도착했어요!' }; st.phase = 'notice';
   }
   return st;
 }
 function answer(st, choice) {
-  var p = st.players[st.turn], q = QMAP[st.q.id], sq = BOARD[st.q.sq];
-  var correct = st.q.order[choice] === 0, msg;
+  var me = st.turn, p = st.players[me], i = st.q.sq, sq = BOARD[i];
+  var correct = st.q.order[choice] === 0, msg, cont = false;
+  var o = getOwner(st, i);
   if (st.q.kind === 'bell') {
-    if (correct) { p.score += 3; msg = '골든벨 성공! +3점'; } else { msg = '아쉬워요! 다음 기회에 도전해요.'; }
+    if (correct) { p.coins += BELL; msg = '골든벨 성공! +' + BELL + '코인'; } else msg = '아쉬워요! 다음 기회에 도전해요.';
+  } else if (st.q.kind === 'claim') {
+    if (correct && !o) {
+      var m = st.progress[sk(i)] || {}; var cnt = (m['p' + me] || 0) + 1; m['p' + me] = cnt; st.progress[sk(i)] = m;
+      if (cnt >= NEED) { st.owners[sk(i)] = { p: me, lv: 1 }; delete st.progress[sk(i)]; msg = '점령 성공! 「' + sq.name + '」이(가) ' + p.name + '의 땅이 되었어요.'; }
+      else if ((st.q.step || 1) < NEED) { cont = true; msg = '정답! 점령까지 ' + cnt + '/' + NEED + '. 바로 다음 문제!'; }
+      else msg = '정답! 점령까지 ' + cnt + '/' + NEED + '. 다음에 와서 한 번 더 맞히면 내 땅!';
+    } else msg = '아쉬워요! 「' + sq.name + '」 점령은 다음 기회에.' + (getProg(st, i, me) ? ' (점령 진행 ' + getProg(st, i, me) + '/' + NEED + '은 남아 있어요)' : '');
+  } else if (st.q.kind === 'up') {
+    if (correct && o && o.p === me) { o.lv = Math.min(MAXLV, o.lv + 1); msg = o.lv >= MAXLV ? '랜드마크 완성! 이제 아무도 빼앗을 수 없어요.' : '레벨 업! 「' + sq.name + '」 레벨 ' + o.lv + ' (통행료 ' + toll(i, o.lv) + '코인)'; }
+    else msg = '아쉬워요! 레벨 업은 다음 기회에.';
   } else {
-    var owner = st.owners[st.q.sq];
-    if (owner == null) {
-      if (correct) { st.owners[st.q.sq] = st.turn; p.score += sq.v; msg = '정답! 「' + sq.name + '」 책을 모았어요. +' + sq.v + '점'; }
-      else { msg = '아쉬워요! 「' + sq.name + '」 책은 아직 주인이 없어요.'; }
-    } else if (owner === st.turn) {
-      if (correct) { p.score += 1; msg = '정답! 내 책을 다시 읽었어요. +1점'; } else { msg = '아쉬워요! 다음에 다시 읽어 봐요.'; }
-    } else {
-      var o = st.players[owner]; o.score += 1;
-      msg = o.name + '의 책을 함께 읽어서 ' + o.name + ' +1점.';
-      if (correct) { p.score += 1; msg += ' 정답이라 ' + p.name + '도 +1점!'; }
-    }
+    if (correct && o && o.p !== me) {
+      var prev = st.players[o.p].name;
+      o.lv -= 1;
+      if (o.lv <= 0) { st.owners[sk(i)] = { p: me, lv: 1 }; msg = '빼앗기 성공! 「' + sq.name + '」이(가) ' + p.name + '의 땅이 되었어요.'; }
+      else msg = '공격 성공! ' + prev + '의 「' + sq.name + '」 레벨이 ' + o.lv + '(으)로 내려갔어요.';
+    } else msg = '아쉬워요! 빼앗기는 실패했어요.';
   }
-  st.result = { choice: choice, correct: correct, msg: msg };
+  st.result = { choice: choice, correct: correct, msg: msg, cont: cont };
   addLog(st, p.name + ': ' + msg);
   st.phase = 'result';
   return st;
 }
+function nextActive(st, from) {
+  var n = st.players.length;
+  for (var k = 1; k <= n; k++) { var j = (from + k) % n; if (!st.players[j].out) return j; }
+  return from;
+}
 function finishTurn(st) {
   st.q = null; st.card = null; st.notice = null; st.result = null;
-  if (NOW() >= st.endsAt) { st.phase = 'ended'; addLog(st, '시간 끝! 게임이 끝났어요.'); return st; }
+  if (NOW() >= st.endsAt || activeCount(st) <= 1) { endGame(st, activeCount(st) <= 1 ? '한 명만 남았어요! 게임 끝.' : '시간 끝! 게임이 끝났어요.'); return st; }
   st.turnSeq += 1;
-  if (st.again) { st.again = false; st.phase = 'roll'; return st; }
-  var n = st.players.length, next = (st.turn + 1) % n;
-  if (n > 1 && st.players[next].skip) { st.players[next].skip = false; addLog(st, st.players[next].name + ' 반납 연체로 한 번 쉬어요'); next = (next + 1) % n; }
-  else if (n === 1) { st.players[0].skip = false; }
+  if (st.again && !st.players[st.turn].out) { st.again = false; st.phase = 'roll'; return st; }
+  st.again = false;
+  var next = nextActive(st, st.turn);
+  if (st.players[next].skip && activeCount(st) > 1) { st.players[next].skip = false; addLog(st, st.players[next].name + ' 반납 연체로 한 번 쉬어요'); next = nextActive(st, next); }
+  else if (st.players[next].skip) { st.players[next].skip = false; }
   st.turn = next; st.phase = 'roll';
   return st;
 }
-function booksOf(st, i) { var c = 0; for (var k in st.owners) { if (st.owners[k] === i) c++; } return c; }
+function endGame(st, why) { st.q = null; st.card = null; st.notice = null; st.result = null; st.phase = 'ended'; addLog(st, why); return st; }
 function ranking(st) {
-  return st.players.map(function (p, i) { return { i: i, p: p, books: booksOf(st, i) }; }).sort(function (a, b) { return b.p.score - a.p.score || b.books - a.books; });
+  var rows = st.players.map(function (p, i) { return { i: i, p: p, assets: p.out ? 0 : assets(st, i), lands: landsOf(st, i) }; });
+  rows.sort(function (a, b) {
+    if (a.p.out !== b.p.out) return a.p.out ? 1 : -1;
+    if (a.p.out) return b.p.outOrder - a.p.outOrder;
+    return b.assets - a.assets || b.p.coins - a.p.coins || b.lands - a.lands;
+  });
+  var top = rows[0];
+  rows.forEach(function (r) { r.win = !r.p.out && r.assets === top.assets && r.p.coins === top.p.coins; });
+  return rows;
 }
 
 /* ---------- Stores ---------- */
-function LocalStore(state) { this.state = state; this.subs = []; }
+function LocalStore(state) { this.state = state; this.subs = []; this.code = ''; }
 LocalStore.prototype.subscribe = function (fn) { this.subs.push(fn); fn(this.state); };
 LocalStore.prototype.mutate = function (fn) {
   var next = fn(clone(this.state));
@@ -538,14 +660,12 @@ function arr(x) {
 function norm(d) {
   d = clone(d);
   d.players = arr(d.players); d.log = arr(d.log); d.used = arr(d.used);
-  var o = {};
-  if (Array.isArray(d.owners)) { d.owners.forEach(function (v, i) { if (v != null) o[i] = v; }); }
-  else if (d.owners) { for (var k in d.owners) o[k] = d.owners[k]; }
-  d.owners = o;
+  d.owners = d.owners && typeof d.owners === 'object' && !Array.isArray(d.owners) ? d.owners : {};
+  d.progress = d.progress && typeof d.progress === 'object' && !Array.isArray(d.progress) ? d.progress : {};
   ['q', 'card', 'notice', 'result', 'dice'].forEach(function (k) { if (d[k] === undefined) d[k] = null; });
   if (d.q) d.q.order = arr(d.q.order);
-  d.again = !!d.again;
-  d.players.forEach(function (p) { p.skip = !!p.skip; p.score = p.score || 0; p.pos = p.pos || 0; });
+  d.again = !!d.again; d.recorded = !!d.recorded; d.noRecord = !!d.noRecord; d.outCount = d.outCount || 0;
+  d.players.forEach(function (p) { p.skip = !!p.skip; p.out = !!p.out; p.coins = p.coins || 0; p.pos = p.pos || 0; p.outOrder = p.outOrder || 0; });
   return d;
 }
 function DbStore(db, code) { this.db = db; this.code = code; this.ref = db.ref('rooms/' + code); this.cb = null; }
@@ -571,19 +691,13 @@ DbStore.prototype.mutate = function (fn) {
 DbStore.prototype.close = function () { if (this.cb) { this.ref.off('value', this.cb); this.cb = null; } };
 
 /* ---------- App state ---------- */
-var DB = null;            // db namespace when online play is available
-var store = null;         // active store
-var S = null;             // latest room state
-var mode = null;          // 'online' | 'local'
-var shown = {};           // player index -> displayed position (for hop animation)
-var animTimer = null;
-var rolling = false;
-var scheduled = {};
+var DB = null, store = null, S = null, mode = null;
+var shown = {}, animTimer = null, rolling = false, scheduled = {};
 var setup = { names: ['', '', '', ''], level: 'mid', minutes: 10 };
+var rankFilter = 'all';
+var recordCache = {};
 
-function showScreen(id) {
-  ['s-home', 's-setup', 's-lobby', 's-game'].forEach(function (s) { $(s).hidden = s !== id; });
-}
+function showScreen(id) { ['s-home', 's-rank', 's-setup', 's-lobby', 's-game'].forEach(function (s) { $(s).hidden = s !== id; }); }
 function myIndex() {
   if (!S) return -1;
   if (mode === 'local') return S.turn;
@@ -593,28 +707,38 @@ function myIndex() {
 function isMyTurn() { return S && (mode === 'local' || myIndex() === S.turn); }
 function isHost() { return S && (mode === 'local' || (S.players[0] && S.players[0].id === CLIENT)); }
 
-/* ---------- Options UI (level / minutes) ---------- */
+/* ---------- Identity ---------- */
+function identity() {
+  var g = $('gInput').value, c = ($('cInput').value || '').replace(/\D/g, ''), n = ($('nInput').value || '').replace(/\D/g, '');
+  var name = ($('nameInput').value || '').trim().replace(/[.#$\[\]\/]/g, '').slice(0, 6);
+  if (!g || !c || !n || !name) return null;
+  return { g: +g, c: +c, n: +n, name: name, key: 'g' + g + 'c' + (+c) + 'n' + (+n) + '_' + name };
+}
+['gInput', 'cInput', 'nInput', 'nameInput'].forEach(function (id) {
+  var saved = ssGet('bm-' + id); if (saved) $(id).value = saved;
+  $(id).addEventListener('input', function () { if (id === 'cInput' || id === 'nInput') this.value = this.value.replace(/\D/g, '').slice(0, 2); ssSet('bm-' + id, this.value); });
+  $(id).addEventListener('change', function () { ssSet('bm-' + id, this.value); });
+});
+$('codeInput').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 4); });
+function playerFrom(idn) { return { id: CLIENT, name: idn.name, g: idn.g, c: idn.c, n: idn.n, key: idn.key, pos: 0, coins: START_COINS, skip: false, out: false, outOrder: 0 }; }
+function who(p) { return p.g ? p.g + '-' + p.c + ' ' + p.name : p.name; }
+
+/* ---------- Options UI ---------- */
 function optionsHTML(level, minutes, editable) {
   var lv = Object.keys(LEVELS).map(function (k) { return '<button type="button" data-level="' + k + '" aria-pressed="' + (k === level) + '"' + (editable ? '' : ' disabled') + '>' + LEVELS[k] + '</button>'; }).join('');
   var mn = [5, 10, 15].map(function (m) { return '<button type="button" data-min="' + m + '" aria-pressed="' + (m === minutes) + '"' + (editable ? '' : ' disabled') + '>' + m + '분</button>'; }).join('');
-  return '<h2>게임 설정</h2><div class="field"><span style="font-weight:700;font-size:14px">문제 수준</span><div class="seg">' + lv + '</div></div>' +
-    '<div class="field"><span style="font-weight:700;font-size:14px">게임 시간</span><div class="seg">' + mn + '</div></div>' +
+  return '<h2>게임 설정</h2><div class="field"><span class="lbl">문제 수준</span><div class="seg">' + lv + '</div></div>' +
+    '<div class="field"><span class="lbl">게임 시간</span><div class="seg">' + mn + '</div></div>' +
     (editable ? '' : '<p class="note" style="margin:0">설정은 방을 만든 친구가 정해요.</p>');
 }
 
 /* ---------- Home ---------- */
-function getName() { return ($('nameInput').value || '').trim().slice(0, 6); }
-$('nameInput').value = lsGet('bm-name') || '';
-$('nameInput').addEventListener('input', function () { lsSet('bm-name', $('nameInput').value); });
-$('codeInput').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 4); });
-
 $('btnLocal').addEventListener('click', function () {
-  var nm = getName();
-  if (nm && !setup.names[0]) setup.names[0] = nm;
+  var nm = ($('nameInput').value || '').trim();
+  if (nm && !setup.names[0]) setup.names[0] = nm.slice(0, 6);
   renderSetup(); showScreen('s-setup');
 });
 $('btnSetupBack').addEventListener('click', function () { showScreen('s-home'); });
-
 function renderSetup() {
   $('localNames').innerHTML = [0, 1, 2, 3].map(function (i) {
     return '<div class="slot filled" style="padding:8px 10px">' + tokenHTML(i) + '<input id="ln' + i + '" aria-label="' + (i + 1) + '번 친구 이름" maxlength="6" autocomplete="off" placeholder="' + (i + 1) + '번 친구" value="' + esc(setup.names[i]) + '" style="flex:1;min-width:0;font-size:17px;padding:8px 10px;border:2px solid var(--line);border-radius:10px"></div>';
@@ -633,14 +757,18 @@ $('btnLocalStart').addEventListener('click', function () {
   if (names.length < 2) { $('setupErr').textContent = '이름을 2명 이상 적어 주세요.'; return; }
   $('setupErr').textContent = '';
   var st = blankRoom('', 'local'); st.level = setup.level; st.minutes = setup.minutes;
-  st.players = names.map(function (n, i) { return { id: 'local' + i, name: n, pos: 0, score: 0, skip: false }; });
+  st.players = names.map(function (n, i) { return { id: 'local' + i, name: n, pos: 0, coins: START_COINS, skip: false, out: false, outOrder: 0 }; });
   startGame(st);
   enterRoom(new LocalStore(st), 'local');
 });
 
+function needId() {
+  var idn = identity();
+  if (!idn) { $('homeErr').textContent = '학년, 반, 번호, 이름을 모두 적어 주세요.'; (!$('gInput').value ? $('gInput') : $('nameInput')).focus(); }
+  return idn;
+}
 $('btnCreate').addEventListener('click', async function () {
-  var nm = getName(); if (!nm) { $('homeErr').textContent = '먼저 내 이름을 적어 주세요.'; $('nameInput').focus(); return; }
-  if (!DB) return;
+  var idn = needId(); if (!idn || !DB) return;
   $('homeErr').textContent = ''; this.disabled = true;
   try {
     for (var t = 0; t < 8; t++) {
@@ -649,8 +777,8 @@ $('btnCreate').addEventListener('click', async function () {
       var made = await s.mutate(function (cur) {
         if (cur && cur.phase !== 'ended' && NOW() - (cur.updatedAt || 0) < 3 * 3600000) return null;
         var st = blankRoom(code, 'online');
-        st.players.push({ id: CLIENT, name: nm, pos: 0, score: 0, skip: false });
-        addLog(st, nm + '이(가) 방을 만들었어요.');
+        st.players.push(playerFrom(idn));
+        addLog(st, idn.name + '이(가) 방을 만들었어요.');
         return st;
       });
       if (made) { enterRoom(s, 'online'); return; }
@@ -659,22 +787,23 @@ $('btnCreate').addEventListener('click', async function () {
   } catch (e) { $('homeErr').textContent = '연결이 원활하지 않아요. 잠시 뒤 다시 눌러 주세요.'; }
   finally { this.disabled = !DB; }
 });
-
 $('btnJoin').addEventListener('click', async function () {
-  var nm = getName(); if (!nm) { $('homeErr').textContent = '먼저 내 이름을 적어 주세요.'; $('nameInput').focus(); return; }
+  var idn = needId(); if (!idn || !DB) return;
   var code = $('codeInput').value; if (!/^\d{4}$/.test(code)) { $('homeErr').textContent = '방 번호 4자리를 넣어 주세요.'; return; }
-  if (!DB) return;
   $('homeErr').textContent = ''; this.disabled = true;
   var why = '';
   try {
     var s = new DbStore(DB, code);
     var res = await s.mutate(function (cur) {
       if (!cur) { why = '그 번호의 방이 없어요. 번호를 다시 확인해 주세요.'; return null; }
-      for (var i = 0; i < cur.players.length; i++) { if (cur.players[i].id === CLIENT) { why = 'already'; return null; } }
+      for (var i = 0; i < cur.players.length; i++) {
+        if (cur.players[i].id === CLIENT) { why = 'already'; return null; }
+        if (cur.players[i].key === idn.key) { why = '같은 학년·반·번호·이름의 친구가 이미 이 방에 있어요.'; return null; }
+      }
       if (cur.phase !== 'lobby') { why = '이미 게임이 시작된 방이에요.'; return null; }
       if (cur.players.length >= 4) { why = '방이 꽉 찼어요. (최대 4명)'; return null; }
-      cur.players.push({ id: CLIENT, name: nm, pos: 0, score: 0, skip: false });
-      addLog(cur, nm + '이(가) 들어왔어요.');
+      cur.players.push(playerFrom(idn));
+      addLog(cur, idn.name + '이(가) 들어왔어요.');
       return cur;
     });
     if (res || why === 'already') { enterRoom(s, 'online'); return; }
@@ -682,17 +811,77 @@ $('btnJoin').addEventListener('click', async function () {
   } catch (e) { $('homeErr').textContent = '연결이 원활하지 않아요. 잠시 뒤 다시 눌러 주세요.'; }
   finally { this.disabled = !DB; }
 });
-
 function enterRoom(s, m) {
   if (store) store.close();
-  store = s; mode = m; S = null; shown = {}; scheduled = {};
+  store = s; mode = m; S = null; shown = {}; scheduled = {}; recordCache = {};
   if (m === 'online') ssSet('bm-room', s.code); else ssSet('bm-room', null);
   store.subscribe(onState, function () { $('lobbyErr').textContent = '연결이 끊겼어요. 화면을 새로 고쳐 주세요.'; });
 }
 function leaveRoom() {
   if (store) store.close();
   store = null; S = null; mode = null; ssSet('bm-room', null);
-  $('overlay').hidden = true; showScreen('s-home');
+  closeModal(); showScreen('s-home');
+}
+
+/* ---------- Ranking ---------- */
+function gradeGroup(g) { return g <= 2 ? 'low' : g <= 4 ? 'mid' : 'high'; }
+function rateOf(r) { return r.games ? r.wins / r.games : 0; }
+function loadRanking() {
+  var body = $('rankBody');
+  if (!DB) { body.innerHTML = '<tr><td colspan="6" class="note" style="text-align:center">랭킹은 인터넷에 연결되어 있을 때 볼 수 있어요.</td></tr>'; return; }
+  body.innerHTML = '<tr><td colspan="6" class="note" style="text-align:center">불러오는 중…</td></tr>';
+  DB.ref('stats').once('value').then(function (snap) {
+    var all = []; snap.forEach(function (ch) { var v = ch.val(); if (v && v.name) all.push(v); });
+    var rows = all.filter(function (r) { return rankFilter === 'all' || gradeGroup(r.g) === rankFilter; });
+    rows.sort(function (a, b) { return (b.wins || 0) - (a.wins || 0) || rateOf(b) - rateOf(a) || (b.games || 0) - (a.games || 0); });
+    if (!rows.length) { body.innerHTML = '<tr><td colspan="6" class="note" style="text-align:center">아직 기록이 없어요. 첫 독서왕이 되어 보세요!</td></tr>'; return; }
+    body.innerHTML = rows.slice(0, 50).map(function (r, k) {
+      return '<tr' + (k < 3 ? ' class="top"' : '') + '><td>' + (k + 1) + '</td><td><b>' + esc(r.name) + '</b> <span class="note">' + r.g + '학년 ' + r.c + '반 ' + r.n + '번</span></td><td>' + (r.wins || 0) + '</td><td>' + (r.losses || 0) + '</td><td>' + Math.round(rateOf(r) * 100) + '%</td><td>' + (r.games || 0) + '</td></tr>';
+    }).join('');
+  }).catch(function () { body.innerHTML = '<tr><td colspan="6" class="note" style="text-align:center">랭킹을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</td></tr>'; });
+}
+$('btnRank').addEventListener('click', function () { showScreen('s-rank'); loadRanking(); });
+$('btnRankBack').addEventListener('click', function () { showScreen('s-home'); });
+$('rankFilter').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  rankFilter = b.dataset.f;
+  Array.prototype.forEach.call(this.querySelectorAll('button'), function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+  loadRanking();
+});
+
+/* Record wins/losses once per finished online game: whoever flips `recorded` writes the stats. */
+function maybeRecord() {
+  if (!S || mode !== 'online' || !DB || S.phase !== 'ended' || S.recorded || scheduled['rec' + S.startedAt]) return;
+  scheduled['rec' + S.startedAt] = true;
+  store.mutate(function (st) { if (!st || st.phase !== 'ended' || st.recorded) return null; st.recorded = true; return st; }).then(function (res) {
+    if (!res || res.noRecord) return;
+    var rows = ranking(res);
+    rows.forEach(function (r) {
+      if (!r.p.key) return;
+      DB.ref('stats/' + r.p.key).transaction(function (cur) {
+        cur = cur || { wins: 0, losses: 0, games: 0, bankrupts: 0 };
+        cur.name = r.p.name; cur.g = r.p.g; cur.c = r.p.c; cur.n = r.p.n;
+        cur.games = (cur.games || 0) + 1;
+        if (r.win) cur.wins = (cur.wins || 0) + 1; else cur.losses = (cur.losses || 0) + 1;
+        if (r.p.out) cur.bankrupts = (cur.bankrupts || 0) + 1;
+        cur.updatedAt = NOW();
+        return cur;
+      });
+    });
+  }).catch(function () { scheduled['rec' + S.startedAt] = false; });
+}
+function loadRecords() {
+  if (!DB || mode !== 'online' || !S) return;
+  S.players.forEach(function (p) {
+    if (!p.key || recordCache[p.key + S.startedAt]) return;
+    recordCache[p.key + S.startedAt] = 'loading';
+    setTimeout(function () {
+      DB.ref('stats/' + p.key).once('value').then(function (snap) {
+        var v = snap.val(); recordCache[p.key + S.startedAt] = v ? ('누적 ' + (v.wins || 0) + '승 ' + (v.losses || 0) + '패') : '';
+        if (S && S.phase === 'ended') renderModal();
+      }).catch(function () {});
+    }, 1800);
+  });
 }
 
 /* ---------- Lobby ---------- */
@@ -711,6 +900,7 @@ $('btnLeave').addEventListener('click', function () {
     s.mutate(function (st) {
       if (!st || st.phase !== 'lobby') return null;
       st.players = st.players.filter(function (p) { return p.id !== CLIENT; });
+      if (!st.players.length) { st.phase = 'ended'; st.noRecord = true; st.recorded = true; }
       return st;
     }).catch(function () {});
   }
@@ -721,7 +911,7 @@ function renderLobby() {
   var html = '';
   for (var i = 0; i < 4; i++) {
     var p = S.players[i];
-    html += p ? '<div class="slot filled">' + tokenHTML(i) + '<span>' + esc(p.name) + '</span>' + (p.id === CLIENT ? '<span class="me-tag">나</span>' : '') + (i === 0 ? '<span class="note">방장</span>' : '') + '</div>'
+    html += p ? '<div class="slot filled">' + tokenHTML(i) + '<span>' + esc(p.name) + '</span><span class="note">' + (p.g ? p.g + '학년 ' + p.c + '반' : '') + '</span>' + (p.id === CLIENT ? '<span class="me-tag">나</span>' : '') + (i === 0 ? '<span class="note">방장</span>' : '') + '</div>'
               : '<div class="slot">' + tokenHTML(i) + '<span>기다리는 중…</span></div>';
   }
   $('lobbySlots').innerHTML = html;
@@ -737,7 +927,7 @@ function buildBoard() {
   var html = '';
   for (var i = 0; i < N; i++) {
     var sq = BOARD[i], pos = rc(i), cls = 'cell', inner = '';
-    if (sq.t === 'book') { inner = '<span class="band"></span><span class="title">' + esc(sq.name) + '</span><span class="val">' + sq.v + '점</span><span class="own" hidden></span>'; }
+    if (sq.t === 'book') { inner = '<span class="band"></span><span class="prog"></span><span class="title">' + esc(sq.name) + '</span><span class="lv"></span><span class="val"></span>'; }
     else if (sq.t === 'card') { cls += ' card'; inner = '<span class="mark" aria-hidden="true"></span><span class="title">책갈피<br>카드</span>'; }
     else { cls += ' corner c-' + sq.t; inner = '<span class="title">' + esc(sq.name) + '</span><span class="val">' + esc(sq.sub) + '</span>'; }
     html += '<div class="' + cls + '" id="cell' + i + '" style="grid-row:' + pos[0] + ';grid-column:' + pos[1] + '">' + inner + '<div class="tokens"></div></div>';
@@ -757,15 +947,28 @@ function renderBoard() {
   for (var i = 0; i < N; i++) {
     var sq = BOARD[i], cell = $('cell' + i);
     if (sq.t === 'book') {
-      var o = S.owners[i];
-      var band = cell.querySelector('.band'), own = cell.querySelector('.own');
-      if (o != null && S.players[o]) { band.style.background = COLORS[o]; own.hidden = false; own.style.background = COLORS[o]; own.textContent = String(o + 1); cell.classList.add('owned'); cell.setAttribute('aria-label', sq.name + ', ' + S.players[o].name + '의 책'); }
-      else { band.style.background = ''; own.hidden = true; cell.classList.remove('owned'); cell.setAttribute('aria-label', sq.name + ', ' + sq.v + '점'); }
+      var o = getOwner(S, i);
+      var band = cell.querySelector('.band'), lv = cell.querySelector('.lv'), val = cell.querySelector('.val'), prog = cell.querySelector('.prog');
+      if (o && S.players[o.p]) {
+        band.style.background = COLORS[o.p];
+        var pips = ''; for (var k = 1; k <= MAXLV; k++) pips += '<i class="' + (k <= o.lv ? 'on' : '') + '"></i>';
+        lv.innerHTML = o.lv >= MAXLV ? '<span class="mark-lm">랜드마크</span>' : pips;
+        val.textContent = '통행료 ' + toll(i, o.lv);
+        cell.classList.toggle('landmark', o.lv >= MAXLV);
+        prog.innerHTML = '';
+        cell.setAttribute('aria-label', sq.name + ', ' + S.players[o.p].name + '의 땅 레벨 ' + o.lv + ', 통행료 ' + toll(i, o.lv) + '코인');
+      } else {
+        band.style.background = ''; lv.innerHTML = ''; val.textContent = '통행료 ' + toll(i, 1); cell.classList.remove('landmark');
+        var ph = ''; S.players.forEach(function (p, pi) { var c = getProg(S, i, pi); if (c > 0 && !p.out) ph += '<span style="background:' + COLORS[pi] + '" title="' + esc(p.name) + ' 점령 ' + c + '/' + NEED + '">' + c + '</span>'; });
+        prog.innerHTML = ph;
+        cell.setAttribute('aria-label', sq.name + ', 빈 땅, 점령하면 통행료 ' + toll(i, 1) + '코인');
+      }
     }
     cell.querySelector('.tokens').innerHTML = '';
     cell.classList.remove('here');
   }
   S.players.forEach(function (p, i) {
+    if (p.out) return;
     var at = shown[i] == null ? p.pos : shown[i];
     var c = $('cell' + at); if (!c) return;
     c.querySelector('.tokens').insertAdjacentHTML('beforeend', tokenHTML(i));
@@ -780,13 +983,9 @@ function renderCenter() {
   if (S.phase === 'roll') {
     if (mine) body = '<button class="btn gold" id="btnRoll" type="button"' + (rolling ? ' disabled' : '') + '>주사위 굴리기</button>';
     else body = '<div class="msg">' + esc(p.name) + '이(가) 주사위를 굴릴 차례예요.</div>';
-  } else if (S.phase === 'quiz') {
-    body = '<div class="msg">' + esc(p.name) + '이(가) 퀴즈를 푸는 중이에요.</div>';
-  } else if (S.phase === 'ended') {
-    body = '<div class="msg">게임이 끝났어요!</div>';
-  } else {
-    body = '<div class="msg">' + esc(S.log[0] || '') + '</div>';
-  }
+  } else if (S.phase === 'quiz') body = '<div class="msg">' + esc(p.name) + '이(가) 퀴즈를 푸는 중이에요.</div>';
+  else if (S.phase === 'ended') body = '<div class="msg">게임이 끝났어요!</div>';
+  else body = '<div class="msg">' + esc(S.log[0] || '') + '</div>';
   var stuck = mode === 'online' && S.phase !== 'ended' && NOW() - S.updatedAt > 30000;
   if (stuck) body += '<button class="btn small" id="btnSkip" type="button">차례 넘기기</button>';
   $('center').innerHTML = turnLine + diceHTML(dv, rolling) + body;
@@ -796,9 +995,9 @@ function renderCenter() {
 function renderSide() {
   $('scores').innerHTML = S.players.map(function (p, i) {
     var me = mode === 'online' && p.id === CLIENT;
-    return '<div class="score' + (i === S.turn && S.phase !== 'ended' ? ' active' : '') + '">' + tokenHTML(i) +
-      '<div class="nm">' + esc(p.name) + (me ? '<span class="me-tag">나</span>' : '') + (p.skip ? '<span class="tag">한 번 쉬기</span>' : '') + '</div>' +
-      '<div class="pts"><b>' + p.score + '</b>점<small>모은 책 ' + booksOf(S, i) + '권</small></div></div>';
+    return '<div class="score' + (i === S.turn && S.phase !== 'ended' ? ' active' : '') + (p.out ? ' out' : '') + '">' + tokenHTML(i) +
+      '<div class="nm">' + esc(p.name) + (me ? '<span class="me-tag">나</span>' : '') + (p.out ? '<span class="tag">파산</span>' : '') + (p.skip ? '<span class="tag">한 번 쉬기</span>' : '') + '</div>' +
+      '<div class="pts"><b>' + p.coins + '</b>코인<small>땅 ' + landsOf(S, i) + '칸 · 자산 ' + (p.out ? 0 : assets(S, i)) + '</small></div></div>';
   }).join('');
   $('log').innerHTML = S.log.slice(0, 6).map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('');
   $('chipRoom').hidden = mode !== 'online';
@@ -819,16 +1018,23 @@ function updateTimer() {
 /* ---------- Modal ---------- */
 function openModal(html) { $('modal').innerHTML = html; $('overlay').hidden = false; }
 function closeModal() { $('overlay').hidden = true; $('modal').innerHTML = ''; }
+function stakeText(q) {
+  var i = q.sq, sq = BOARD[i], o = getOwner(S, i), me = S.turn;
+  if (q.kind === 'bell') return '맞히면 +' + BELL + '코인';
+  if (q.kind === 'claim') return '점령 도전 ' + (q.step || 1) + '번째 문제 · 지금 ' + getProg(S, i, me) + '/' + NEED + ' (' + NEED + '번 맞히면 내 땅!)';
+  if (q.kind === 'up') return '맞히면 레벨 업' + (o ? ' (지금 레벨 ' + o.lv + ')' : '');
+  return '맞히면 이 칸 레벨 -1' + (o ? ' (지금 레벨 ' + o.lv + ', 0이 되면 내 땅!)' : '');
+}
 function renderModal() {
   if (animating()) { closeModal(); return; }
   var p = S.players[S.turn], mine = isMyTurn();
   if (S.phase === 'quiz' || S.phase === 'result') {
     var q = QMAP[S.q.id], sq = BOARD[S.q.sq];
-    var kind = S.q.kind === 'bell' ? '독서 골든벨 (+3점)' : '「' + sq.name + '」 칸';
-    var owner = S.q.kind === 'book' ? S.owners[S.q.sq] : null;
-    var ownerNote = S.q.kind === 'book' && owner != null && S.players[owner] && S.phase === 'quiz' ? '<span class="note">' + esc(S.players[owner].name) + '의 책이에요</span>' : '';
-    var html = '<div class="head">' + tokenHTML(S.turn) + '<span class="kind">' + esc(kind) + '</span><span class="cat">' + esc(q.cat) + '</span>' + ownerNote + '</div>' +
-      '<div class="q">' + esc(q.q) + '</div><div class="choices">';
+    var kinds = { claim: '「' + sq.name + '」 점령 도전', up: '내 땅 「' + sq.name + '」 레벨 업', attack: '「' + sq.name + '」 빼앗기 도전', bell: '독서 골든벨' };
+    var html = '<div class="head">' + tokenHTML(S.turn) + '<span class="kind">' + esc(kinds[S.q.kind] || sq.name) + '</span><span class="cat">' + esc(q.cat) + '</span></div>';
+    if (S.q.note) html += '<div class="stake pay">' + esc(S.q.note) + '</div>';
+    if (S.phase === 'quiz') html += '<div class="stake">' + esc(stakeText(S.q)) + '</div>';
+    html += '<div class="q">' + esc(q.q) + '</div><div class="choices">';
     S.q.order.forEach(function (oi, k) {
       var cls = 'choice';
       if (S.phase === 'result') { if (oi === 0) cls += ' right'; else if (k === S.result.choice) cls += ' wrong'; }
@@ -836,58 +1042,55 @@ function renderModal() {
       html += '<button type="button" class="' + cls + '" data-k="' + k + '"' + (dis ? ' disabled' : '') + '><span class="no">' + (k + 1) + '</span><span>' + esc(q.c[oi]) + '</span></button>';
     });
     html += '</div>';
-    if (S.phase === 'result') {
-      html += '<div class="verdict ' + (S.result.correct ? 'ok' : 'no') + '">' + (S.result.correct ? '정답이에요!' : '아쉬워요, 정답은 ' + (S.q.order.indexOf(0) + 1) + '번!') + '<p>' + esc(S.result.msg) + '</p><p>' + esc(q.ex) + '</p></div>';
-    } else if (!mine) {
-      html += '<p class="waiting">' + esc(p.name) + '이(가) 답을 고르고 있어요. 같이 생각해 봐요!</p>';
-    }
+    if (S.phase === 'result') html += '<div class="verdict ' + (S.result.correct ? 'ok' : 'no') + '">' + (S.result.correct ? '정답이에요!' : '아쉬워요, 정답은 ' + (S.q.order.indexOf(0) + 1) + '번!') + '<p>' + esc(S.result.msg) + '</p><p>' + esc(q.ex) + '</p></div>';
+    else if (!mine) html += '<p class="waiting">' + esc(p.name) + '이(가) 답을 고르고 있어요. 같이 생각해 봐요!</p>';
     openModal(html);
-    if (S.phase === 'quiz' && mine) {
-      Array.prototype.forEach.call($('modal').querySelectorAll('.choice'), function (b) { b.addEventListener('click', onAnswer); });
-    }
+    if (S.phase === 'quiz' && mine) Array.prototype.forEach.call($('modal').querySelectorAll('.choice'), function (b) { b.addEventListener('click', onAnswer); });
   } else if (S.phase === 'card') {
     var c = CMAP[S.card.id];
     openModal('<div class="head">' + tokenHTML(S.turn) + '<span class="kind">' + esc(p.name) + '의 책갈피 카드</span></div><div class="bookmark">' + esc(c.text) + '</div><p class="big-msg">' + esc(c.fx) + '</p>');
   } else if (S.phase === 'notice') {
-    openModal('<div class="head">' + tokenHTML(S.turn) + '<span class="kind">' + esc(S.notice.title) + '</span></div><p class="big-msg">' + esc(p.name) + ': ' + esc(S.notice.text) + '</p>');
+    openModal('<div class="head">' + tokenHTML(S.turn) + '<span class="kind">' + esc(S.notice.title) + '</span></div>' + (S.notice.bankrupt ? '<div class="bankrupt">파산!</div>' : '') + '<p class="big-msg">' + esc(p.name) + ': ' + esc(S.notice.text) + '</p>');
   } else if (S.phase === 'ended') {
-    var medals = ['1등', '2등', '3등', '4등'];
+    loadRecords();
     var rk = ranking(S), html2 = '<h2 style="font-size:34px;text-align:center">게임 끝! 오늘의 독서왕은?</h2><div class="rank">';
     rk.forEach(function (r, k) {
-      var titles = []; for (var key in S.owners) { if (S.owners[key] === r.i) titles.push(BOARD[key].name); }
-      html2 += '<div class="rank-row' + (k === 0 ? ' first' : '') + '"><span class="medal">' + medals[k] + '</span>' + tokenHTML(r.i) + '<div><b>' + esc(r.p.name) + '</b><div class="note">' + (titles.length ? esc(titles.join(', ')) : '모은 책 없음') + '</div></div><span class="pts">' + r.p.score + '점</span></div>';
+      var rec = recordCache[(r.p.key || '') + S.startedAt];
+      html2 += '<div class="rank-row' + (k === 0 ? ' first' : '') + '"><span class="medal">' + (k + 1) + '등</span>' + tokenHTML(r.i) +
+        '<div><b>' + esc(r.p.name) + '</b> <span class="wl ' + (r.win ? 'w">승' : 'l">패') + '</span>' +
+        '<div class="note">' + (r.p.out ? '파산' : '코인 ' + r.p.coins + ' · 땅 ' + r.lands + '칸') + (rec && rec !== 'loading' ? ' · ' + esc(rec) : '') + '</div></div>' +
+        '<span class="pts"><b>' + (r.p.out ? 0 : r.assets) + '</b><br><span class="note">자산</span></span></div>';
     });
-    html2 += '</div><div class="actions">';
+    html2 += '</div>';
+    if (mode === 'local') html2 += '<p class="note" style="margin:0">한 기기 모드는 랭킹 기록에 남지 않아요.</p>';
+    else if (S.noRecord) html2 += '<p class="note" style="margin:0">일찍 끝낸 게임은 랭킹 기록에 남지 않아요.</p>';
+    else html2 += '<p class="note" style="margin:0">1등은 1승, 나머지는 1패로 랭킹에 기록돼요.</p>';
+    html2 += '<div class="actions">';
     if (isHost()) html2 += '<button class="btn" type="button" id="btnAgain">같은 친구들과 다시 하기</button>';
     else html2 += '<span class="note" style="align-self:center">방장이 다시 하기를 누르면 새 판이 시작돼요.</span>';
+    if (mode === 'online') html2 += '<button class="btn gold" type="button" id="btnEndRank">랭킹 보기</button>';
     html2 += '<button class="btn primary" type="button" id="btnHome">처음으로</button></div>';
     openModal(html2);
     $('btnHome').addEventListener('click', leaveRoom);
     var ba = $('btnAgain'); if (ba) ba.addEventListener('click', onAgain);
-  } else {
-    closeModal();
-  }
+    var br = $('btnEndRank'); if (br) br.addEventListener('click', function () { leaveRoom(); showScreen('s-rank'); loadRanking(); });
+  } else closeModal();
 }
 
 /* ---------- Animation ---------- */
 function animating() {
   if (!S) return false;
-  for (var i = 0; i < S.players.length; i++) { if (shown[i] != null && shown[i] !== S.players[i].pos) return true; }
+  for (var i = 0; i < S.players.length; i++) { if (!S.players[i].out && shown[i] != null && shown[i] !== S.players[i].pos) return true; }
   return false;
 }
 function stepAnim() {
   if (!S) return;
-  var moved = false;
   S.players.forEach(function (p, i) {
-    if (shown[i] == null) { shown[i] = p.pos; return; }
-    if (shown[i] !== p.pos) {
-      var dist = (p.pos - shown[i] + N) % N;
-      shown[i] = dist > 8 ? p.pos : (shown[i] + 1) % N; moved = true;
-    }
+    if (shown[i] == null || p.out) { shown[i] = p.pos; return; }
+    if (shown[i] !== p.pos) { var dist = (p.pos - shown[i] + N) % N; shown[i] = dist > 8 ? p.pos : (shown[i] + 1) % N; }
   });
   renderBoard();
   if (!animating()) { clearInterval(animTimer); animTimer = null; renderModal(); schedule(); }
-  return moved;
 }
 function startAnim() {
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -899,10 +1102,7 @@ function startAnim() {
 function onState(st) {
   var prevPhase = S ? S.phase : null;
   S = st;
-  if (S.phase === 'lobby') {
-    closeModal(); showScreen('s-lobby'); renderLobby();
-    shown = {}; return;
-  }
+  if (S.phase === 'lobby') { closeModal(); showScreen('s-lobby'); renderLobby(); shown = {}; return; }
   if (mode === 'online' && myIndex() < 0) { $('homeErr').textContent = '이 방의 게임에 참여하고 있지 않아요.'; leaveRoom(); return; }
   showScreen('s-game');
   if (prevPhase === 'lobby' || prevPhase == null) { shown = {}; S.players.forEach(function (p, i) { shown[i] = p.pos; }); }
@@ -910,24 +1110,28 @@ function onState(st) {
   startAnim();
   renderBoard(); renderCenter(); renderSide(); renderModal();
   schedule();
+  maybeRecord();
 }
-
 /* Timed follow-ups run on the device whose turn it is (every turn on a shared device). */
 function schedule() {
-  if (!S || !store || animating()) return;
-  if (!isMyTurn()) return;
+  if (!S || !store || animating() || !isMyTurn()) return;
   var ph = S.phase;
   if (ph !== 'card' && ph !== 'notice' && ph !== 'result') return;
   var key = S.turnSeq + ':' + ph;
+  if (ph === 'result') key += ':' + S.q.step;
   if (scheduled[key]) return;
   scheduled[key] = true;
-  var seq = S.turnSeq, delay = ph === 'result' ? 3600 : 2600;
+  var seq = S.turnSeq, step = S.q ? S.q.step : 0;
+  var delay = ph === 'result' ? (S.result && S.result.cont ? 2400 : 3800) : (S.notice && S.notice.bankrupt ? 3600 : 2600);
   setTimeout(function () {
     if (!store) return;
-    store.mutate(function (st) { if (!st || st.turnSeq !== seq || st.phase !== ph) return null; return finishTurn(st); }).catch(function () { scheduled[key] = false; });
+    store.mutate(function (st) {
+      if (!st || st.turnSeq !== seq || st.phase !== ph) return null;
+      if (ph === 'result') { if (!st.q || st.q.step !== step) return null; return afterResult(st); }
+      return finishTurn(st);
+    }).catch(function () { scheduled[key] = false; });
   }, delay);
 }
-
 function onRoll() {
   if (!isMyTurn() || S.phase !== 'roll' || rolling) return;
   rolling = true; renderCenter();
@@ -950,13 +1154,13 @@ function onSkip() {
   store.mutate(function (st) { if (!st || st.updatedAt !== seen || st.phase === 'ended' || st.phase === 'lobby') return null; addLog(st, st.players[st.turn].name + '의 차례를 넘겼어요.'); return finishTurn(st); }).catch(function () {});
 }
 function onAgain() {
-  if (mode === 'local') { store.mutate(function (st) { return startGame(st); }); shown = {}; return; }
-  store.mutate(function (st) { if (!st || st.phase !== 'ended') return null; st.phase = 'lobby'; st.players.forEach(function (p) { p.pos = 0; p.score = 0; p.skip = false; }); st.owners = {}; st.log = []; addLog(st, '새 판을 준비해요.'); return st; }).catch(function () {});
+  if (mode === 'local') { shown = {}; store.mutate(function (st) { return startGame(st); }); return; }
+  store.mutate(function (st) { if (!st || st.phase !== 'ended') return null; st.phase = 'lobby'; st.players.forEach(function (p) { p.pos = 0; p.coins = START_COINS; p.skip = false; p.out = false; p.outOrder = 0; }); st.owners = {}; st.progress = {}; st.log = []; st.recorded = false; st.noRecord = false; addLog(st, '새 판을 준비해요.'); return st; }).catch(function () {});
 }
 $('btnQuit').addEventListener('click', function () {
   if (!S) return;
   if (S.phase === 'ended') { leaveRoom(); return; }
-  store.mutate(function (st) { if (!st || st.phase === 'ended' || st.phase === 'lobby') return null; st.q = null; st.card = null; st.notice = null; st.result = null; st.phase = 'ended'; addLog(st, '게임을 일찍 마쳤어요.'); return st; }).catch(function () {});
+  store.mutate(function (st) { if (!st || st.phase === 'ended' || st.phase === 'lobby') return null; st.noRecord = true; return endGame(st, '게임을 일찍 마쳤어요.'); }).catch(function () {});
 });
 
 /* Clock: timer chip, stuck check, and time-up when nobody is mid-action */
@@ -965,12 +1169,9 @@ setInterval(function () {
   updateTimer();
   if (S.phase === 'roll' && S.endsAt && NOW() >= S.endsAt && isMyTurn() && !rolling && !scheduled['end' + S.turnSeq]) {
     scheduled['end' + S.turnSeq] = true;
-    store.mutate(function (st) { if (!st || st.phase !== 'roll' || NOW() < st.endsAt) return null; st.phase = 'ended'; addLog(st, '시간 끝! 게임이 끝났어요.'); return st; }).catch(function () {});
+    store.mutate(function (st) { if (!st || st.phase !== 'roll' || NOW() < st.endsAt) return null; return endGame(st, '시간 끝! 게임이 끝났어요.'); }).catch(function () {});
   }
-  if (mode === 'online' && S.phase !== 'ended') {
-    var needSkip = NOW() - S.updatedAt > 30000;
-    if (needSkip !== !!$('btnSkip')) renderCenter();
-  }
+  if (mode === 'online' && S.phase !== 'ended') { var needSkip = NOW() - S.updatedAt > 30000; if (needSkip !== !!$('btnSkip')) renderCenter(); }
 }, 500);
 
 /* ---------- Online availability ---------- */
@@ -980,11 +1181,11 @@ var OFFLINE_MSG = {
 };
 function setOnline(ok, why) {
   $('btnCreate').disabled = !ok; $('btnJoin').disabled = !ok;
-  $('onlineNote').textContent = ok ? '같은 링크를 연 태블릿끼리 방 번호로 함께 할 수 있어요.' : (OFFLINE_MSG[why] || OFFLINE_MSG.net);
+  $('onlineNote').textContent = ok ? '같은 주소를 연 태블릿끼리 방 번호로 함께 할 수 있어요.' : (OFFLINE_MSG[why] || OFFLINE_MSG.net);
 }
 function initOnline() {
   var cfg = window.BOOKMARVEL_FIREBASE || {};
-  if (!window.firebase || !cfg.apiKey || !cfg.databaseURL || /붙여/.test(cfg.apiKey)) { setOnline(false, 'config'); return; }
+  if (!window.firebase || !cfg.apiKey || !cfg.databaseURL) { setOnline(false, 'config'); return; }
   try { if (!firebase.apps.length) firebase.initializeApp(cfg); } catch (e) { setOnline(false, 'config'); return; }
   firebase.auth().signInAnonymously().then(function () {
     DB = firebase.database();
@@ -1001,7 +1202,6 @@ function initOnline() {
   }).catch(function () { setOnline(false, 'net'); });
 }
 initOnline();
-
 showScreen('s-home');
 })();
 </script>
