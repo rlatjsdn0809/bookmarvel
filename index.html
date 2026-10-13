@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>청소 책마블</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: one-screen tablet game. Home / lobby cards centered; in play, a square board (6x6 ring, centre = status) beside a score column, stacking on narrow screens. Single light "school paper" look shared with the booth leaflet. */
+:root {
+  --paper: #F6F3EC;
+  --card: #FFFFFF;
+  --ink: #22304A;
+  --ink-soft: #4A5568;
+  --line: #D9D1C2;
+  --board: #EBDDC3;
+  --board-edge: #4A4F5C;
+  --gold: #F0B44C;
+  --teal: #4FB3A5;
+  --sky: #7A98D4;
+  --coral: #E07B58;
+  --leaf: #86B96E;
+  --p1: #D9553F;
+  --p2: #2F6FD6;
+  --p3: #3E9C4F;
+  --p4: #E2A21B;
+  --ok: #2E7D4F;
+  --ok-bg: #E3F3E8;
+  --bad: #B83A2E;
+  --bad-bg: #FBE6E3;
+  --display: 'Jua', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --body: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  color-scheme: light;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; word-break: keep-all; -webkit-tap-highlight-color: transparent; }
+* { box-sizing: border-box; }
+button { font-family: inherit; color: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+#app { max-width: 1200px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 24px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap: balance; }
+
+.btn { border: 2px solid var(--ink); background: var(--card); border-radius: 14px; padding: 12px 18px; font-size: 17px; font-weight: 700; cursor: pointer; min-height: 48px; box-shadow: 0 3px 0 var(--ink); transition: transform .08s, box-shadow .08s; }
+.btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 0 0 var(--ink); }
+.btn.primary { background: var(--ink); color: #FFFFFF; }
+.btn.gold { background: var(--gold); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.small { font-size: 14px; padding: 6px 12px; min-height: 36px; border-radius: 10px; box-shadow: 0 2px 0 var(--ink); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-weight: 700; font-size: 14px; }
+.field input { font-size: 18px; padding: 10px 14px; border: 2px solid var(--ink); border-radius: 12px; background: var(--card); min-height: 48px; width: 100%; }
+.seg { display: flex; flex-wrap: wrap; gap: 8px; }
+.seg button { border: 2px solid var(--ink); background: var(--card); border-radius: 999px; padding: 8px 16px; font-size: 15px; font-weight: 700; cursor: pointer; min-height: 44px; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: #FFFFFF; }
+.note { font-size: 13px; color: var(--ink-soft); }
+.err { color: var(--bad); font-weight: 700; font-size: 14px; min-height: 1.5em; }
+
+/* Home */
+.home { display: grid; gap: 20px; max-width: 920px; margin: 0 auto; }
+.hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; padding-top: 8px; }
+.hero h1 { font-size: clamp(44px, 9vw, 76px); line-height: 1; }
+.hero p { margin: 8px 0 0; font-size: 17px; color: var(--ink-soft); }
+.shelf { display: flex; align-items: flex-end; gap: 4px; height: 92px; padding: 0 8px; border-bottom: 8px solid #8A6A44; }
+.shelf span { display: block; width: 18px; border-radius: 3px 3px 0 0; border: 2px solid var(--ink); border-bottom: none; }
+.home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.panel { background: var(--card); border: 2px solid var(--ink); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel h2 { font-size: 26px; }
+.rules ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.code-input { letter-spacing: .3em; text-align: center; font-family: var(--display); font-size: 26px !important; }
+
+/* Lobby */
+.lobby { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
+.roomcode { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.roomcode .num { font-family: var(--display); font-size: clamp(48px, 12vw, 80px); letter-spacing: .12em; line-height: 1; }
+.slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.slot { border: 2px dashed var(--line); border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 10px; min-height: 64px; color: var(--ink-soft); }
+.slot.filled { border-style: solid; border-color: var(--ink); color: var(--ink); background: var(--card); font-weight: 700; }
+.token { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ink); display: inline-flex; align-items: center; justify-content: center; font-family: var(--display); color: #FFFFFF; font-size: 15px; line-height: 1; }
+.me-tag { font-size: 12px; background: var(--ink); color: #FFFFFF; padding: 1px 8px; border-radius: 999px; font-weight: 700; }
+
+/* Game */
+.topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.topbar .brand { font-family: var(--display); font-size: 26px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { border: 2px solid var(--ink); border-radius: 999px; padding: 3px 12px; font-weight: 700; font-size: 14px; background: var(--card); font-variant-numeric: tabular-nums; }
+.chip.timer { font-family: var(--display); font-size: 20px; padding: 0 14px; }
+.chip.timer.low { background: var(--bad); color: #FFFFFF; border-color: var(--bad); }
+.game { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 16px; align-items: start; }
+@media (max-width: 880px) { .game { grid-template-columns: minmax(0, 1fr); } }
+.board-wrap { display: flex; justify-content: center; min-width: 0; }
+.board { container-type: inline-size; width: min(100%, calc(100vh - 120px)); min-width: 280px; aspect-ratio: 1; max-width: 100%; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr)); gap: 3px; padding: 8px; background: var(--board-edge); border-radius: 16px; position: relative; }
+.cell { background: var(--card); border-radius: 6px; position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 4px 5px; font-size: max(9px, 2cqw); line-height: 1.2; min-width: 0; }
+.cell .band { position: absolute; inset: 0 0 auto 0; height: 18%; background: #CBBFA8; }
+.cell .title { position: relative; margin-top: 20%; font-weight: 700; }
+.cell .val { position: relative; margin-top: auto; font-size: max(8px, 1.7cqw); color: var(--ink-soft); font-weight: 700; }
+.cell .own { position: absolute; top: 3px; right: 4px; width: max(14px, 3cqw); height: max(14px, 3cqw); border-radius: 50%; border: 1.5px solid var(--ink); color: #FFFFFF; font-family: var(--display); font-size: max(8px, 1.7cqw); display: flex; align-items: center; justify-content: center; }
+.cell.owned .band { height: 22%; }
+.cell.corner { background: #FBF7EE; align-items: center; justify-content: center; text-align: center; padding: 4px; }
+.cell.corner .title { margin: 0; font-family: var(--display); font-weight: 400; font-size: max(11px, 2.7cqw); }
+.cell.corner .val { margin: 2px 0 0; }
+.cell.c-start { background: #E8F1E2; }
+.cell.c-bell { background: #FFF3D6; }
+.cell.c-late { background: #FBE6E3; }
+.cell.c-rest { background: #E6EFF8; }
+.cell.card { background: #F3EEF8; align-items: center; justify-content: center; text-align: center; }
+.cell.card .title { margin: 0; font-family: var(--display); font-weight: 400; font-size: max(10px, 2.3cqw); }
+.cell.card .mark { width: 34%; aspect-ratio: .7; background: #8C6BB1; border: 1.5px solid var(--ink); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); margin-bottom: 4px; }
+.cell.here { box-shadow: inset 0 0 0 3px var(--ink); }
+.tokens { position: absolute; left: 3px; right: 3px; bottom: 3px; display: flex; flex-wrap: wrap; gap: 2px; justify-content: flex-end; }
+.tokens .token { width: max(16px, 3.6cqw); height: max(16px, 3.6cqw); font-size: max(9px, 2cqw); border-width: 1.5px; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.center { grid-row: 2 / 6; grid-column: 2 / 6; background: #F8F2E6; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: max(8px, 1.6cqw); padding: 12px; text-align: center; min-width: 0; }
+.center .turn { font-family: var(--display); font-size: max(18px, 4.4cqw); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.center .msg { font-size: max(13px, 2.4cqw); color: var(--ink-soft); min-height: 1.5em; }
+.dice { width: max(64px, 15cqw); aspect-ratio: 1; background: #FFFFFF; border: 3px solid var(--ink); border-radius: 18%; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); padding: calc(max(64px, 15cqw) * 0.09); box-shadow: 0 4px 0 var(--ink); }
+.dice i { display: block; margin: 14%; border-radius: 50%; background: var(--ink); visibility: hidden; }
+.dice i.on { visibility: visible; }
+.dice.rolling { animation: wob .18s linear infinite; }
+@keyframes wob { 0% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } 100% { transform: rotate(-8deg); } }
+.center .btn { font-size: max(16px, 3cqw); }
+.side { display: grid; gap: 12px; min-width: 0; }
+.scores { display: grid; gap: 8px; }
+.score { display: flex; align-items: center; gap: 10px; background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+.score.active { border-color: var(--ink); box-shadow: 0 3px 0 var(--ink); }
+.score .nm { font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.score .pts { margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
+.score .pts b { font-family: var(--display); font-size: 24px; font-weight: 400; }
+.score .pts small { display: block; color: var(--ink-soft); font-size: 12px; }
+.tag { font-size: 11px; border-radius: 999px; padding: 0 7px; background: var(--bad-bg); color: var(--bad); font-weight: 700; }
+.log { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; font-size: 13px; }
+.log h3 { font-size: 16px; margin-bottom: 4px; }
+.log ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+.log li { color: var(--ink-soft); }
+.log li:first-child { color: var(--ink); font-weight: 700; }
+
+/* Overlay */
+.overlay { position: fixed; inset: 0; background: rgba(34, 48, 74, .45); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
+.modal { background: var(--card); border: 3px solid var(--ink); border-radius: 22px; width: min(640px, 100%); max-height: 100%; overflow: auto; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 8px 0 rgba(34,48,74,.35); }
+.modal .head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.modal .kind { font-family: var(--display); font-size: 22px; }
+.cat { font-size: 13px; font-weight: 700; border-radius: 999px; padding: 2px 10px; background: #EFE7D6; }
+.modal .q { font-size: clamp(19px, 3.4vw, 25px); font-weight: 700; line-height: 1.45; }
+.choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 520px) { .choices { grid-template-columns: minmax(0, 1fr); } }
+.choice { border: 2px solid var(--ink); background: #FFFFFF; border-radius: 14px; padding: 14px; font-size: 17px; font-weight: 700; text-align: left; cursor: pointer; min-height: 60px; display: flex; gap: 10px; align-items: center; }
+.choice .no { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--paper); border: 2px solid var(--ink); display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 15px; }
+.choice:disabled { cursor: default; }
+.choice.right { background: var(--ok-bg); border-color: var(--ok); }
+.choice.right .no { background: var(--ok); color: #FFFFFF; border-color: var(--ok); }
+.choice.wrong { background: var(--bad-bg); border-color: var(--bad); }
+.verdict { border-radius: 14px; padding: 12px 14px; font-weight: 700; }
+.verdict.ok { background: var(--ok-bg); color: var(--ok); }
+.verdict.no { background: var(--bad-bg); color: var(--bad); }
+.verdict p { margin: 4px 0 0; color: var(--ink); font-weight: 500; font-size: 14px; }
+.waiting { color: var(--ink-soft); font-weight: 700; text-align: center; }
+.bookmark { align-self: center; width: 160px; padding: 22px 16px 46px; background: #8C6BB1; color: #FFFFFF; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 86%, 0 100%); text-align: center; font-family: var(--display); font-size: 22px; line-height: 1.3; }
+.big-msg { font-size: 20px; font-weight: 700; text-align: center; }
+.rank { display: grid; gap: 8px; }
+.rank-row { display: flex; align-items: center; gap: 12px; border: 2px solid var(--line); border-radius: 14px; padding: 10px 14px; }
+.rank-row.first { border-color: var(--ink); background: #FFF6E3; }
+.medal { font-family: var(--display); font-size: 22px; width: 44px; text-align: center; }
+.rank-row .pts { margin-left: auto; font-family: var(--display); font-size: 24px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+@media (prefers-reduced-motion: reduce) { .dice.rolling { animation: none; } .btn { transition: none; } }
+body { margin: 0; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<section id="s-home" class="home" aria-label="처음 화면">
+  <div class="hero">
+    <div>
+      <h1>청소 책마블</h1>
+      <p>주사위를 굴려 동화책 보드판을 돌고, 책과 우리말 퀴즈를 맞혀 책을 모아요!</p>
+    </div>
+    <div class="shelf" aria-hidden="true">
+      <span style="height:70px;background:#D9553F"></span><span style="height:84px;background:#2F6FD6"></span><span style="height:62px;background:#F0B44C"></span><span style="height:78px;background:#3E9C4F"></span><span style="height:56px;background:#7A98D4"></span><span style="height:88px;background:#E07B58"></span><span style="height:66px;background:#4FB3A5"></span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="field">
+      <label for="nameInput">내 이름 (6글자까지)</label>
+      <input id="nameInput" maxlength="6" autocomplete="off" placeholder="예: 김청소">
+    </div>
+    <div class="home-grid">
+      <div class="panel" style="border-color: var(--line)">
+        <h2>방 만들기</h2>
+        <p class="note" style="margin:0">방 번호가 생겨요. 친구들은 같은 링크에서 그 번호로 들어와요.</p>
+        <button id="btnCreate" class="btn primary" type="button" disabled>방 만들기</button>
+      </div>
+      <div class="panel" style="border-color: var(--line)">
+        <h2>방 들어가기</h2>
+        <div class="field">
+          <label for="codeInput">방 번호 4자리</label>
+          <input id="codeInput" class="code-input" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0000">
+        </div>
+        <button id="btnJoin" class="btn primary" type="button" disabled>들어가기</button>
+      </div>
+    </div>
+    <p id="onlineNote" class="note" style="margin:0">여러 태블릿 연결을 준비하는 중이에요…</p>
+    <p id="homeErr" class="err" role="alert"></p>
+  </div>
+
+  <div class="home-grid">
+    <div class="panel">
+      <h2>한 기기로 하기</h2>
+      <p class="note" style="margin:0">태블릿 한 대를 돌려 가며 2~4명이 함께 해요. 인터넷 연결이나 로그인이 없어도 돼요.</p>
+      <button id="btnLocal" class="btn gold" type="button">한 기기로 시작하기</button>
+    </div>
+    <div class="panel rules">
+      <h2>이렇게 놀아요</h2>
+      <ol>
+        <li>차례가 되면 주사위를 굴려 칸을 이동해요.</li>
+        <li>동화책 칸에서 퀴즈를 맞히면 그 책을 모아 점수를 얻어요.</li>
+        <li>친구의 책 칸에 가면 책 주인이 1점! 퀴즈를 맞히면 나도 1점!</li>
+        <li>정해진 시간이 끝나면 점수가 가장 높은 사람이 독서왕이에요.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section id="s-setup" class="lobby" aria-label="한 기기 설정" hidden>
+  <div class="topbar"><span class="brand">청소 책마블</span><button id="btnSetupBack" class="btn small" type="button">처음으로</button></div>
+  <div class="panel">
+    <h2>함께 할 친구 이름</h2>
+    <div class="slots" id="localNames"></div>
+    <p class="note" style="margin:0">2명 이상 적으면 시작할 수 있어요.</p>
+  </div>
+  <div class="panel" id="setupOptions"></div>
+  <p id="setupErr" class="err" role="alert"></p>
+  <div class="actions"><button id="btnLocalStart" class="btn primary" type="button">게임 시작</button></div>
+</section>
+
+<section id="s-lobby" class="lobby" aria-label="대기실" hidden>
+  <div class="topbar"><span class="brand">청소 책마블</span><button id="btnLeave" class="btn small" type="button">나가기</button></div>
+  <div class="panel">
+    <div class="roomcode">
+      <div><div class="note">방 번호</div><div class="num" id="lobbyCode">----</div></div>
+      <p class="note" style="max-width: 300px; margin: 0">친구들은 같은 게임 링크를 열고 <b>방 들어가기</b>에 이 번호를 넣어요. 최대 4명까지 들어올 수 있어요.</p>
+    </div>
+    <div class="slots" id="lobbySlots"></div>
+  </div>
+  <div class="panel" id="lobbyOptions"></div>
+  <p id="lobbyErr" class="err" role="alert"></p>
+  <div class="actions"><span id="lobbyWait" class="note" style="align-self:center"></span><button id="btnStart" class="btn primary" type="button">게임 시작</button></div>
+</section>
+
+<section id="s-game" aria-label="게임" hidden>
+  <div class="topbar">
+    <span class="brand">청소 책마블</span>
+    <div class="chips">
+      <span class="chip" id="chipRoom"></span>
+      <span class="chip" id="chipLevel"></span>
+      <span class="chip timer" id="chipTimer">10:00</span>
+      <button id="btnQuit" class="btn small" type="button">그만하기</button>
+    </div>
+  </div>
+  <div class="game">
+    <div class="board-wrap"><div class="board" id="board"></div></div>
+    <div class="side">
+      <div class="scores" id="scores"></div>
+      <div class="log"><h3>소식</h3><ul id="log"></ul></div>
+    </div>
+  </div>
+</section>
+
+<div id="overlay" class="overlay" hidden><div class="modal" id="modal" role="dialog" aria-modal="true" aria-live="polite"></div></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+/* Firebase 콘솔 > 프로젝트 설정 > 내 앱 > SDK 설정 및 구성(firebaseConfig) 값을 그대로 넣으세요. */
+window.BOOKMARVEL_FIREBASE = {
+  apiKey: "AIzaSyD-osf_Dl7wsd6v53UwkT-39eSCkj-H8Zs",
+  authDomain: "bookmarvel-42c00.firebaseapp.com",
+  databaseURL: "https://bookmarvel-42c00-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "bookmarvel-42c00",
+  storageBucket: "bookmarvel-42c00.firebasestorage.app",
+  messagingSenderId: "449805886717",
+  appId: "1:449805886717:web:61de3be218a32c383b4a94"
+};
+</script>
+<script>
+(function () {
+'use strict';
+
+/* ---------- Board ---------- */
+var BOARD = [
+  { t: 'start', name: '출발', sub: '지나가면 +2점' },
+  { t: 'book', key: 'heungbu', name: '흥부와 놀부', v: 2 },
+  { t: 'book', key: 'sunmoon', name: '해님 달님', v: 2 },
+  { t: 'card' },
+  { t: 'book', key: 'turtle', name: '토끼와 거북이', v: 2 },
+  { t: 'rest', name: '도서관 쉼터', sub: '+1점' },
+  { t: 'book', key: 'pigs', name: '아기 돼지 삼 형제', v: 2 },
+  { t: 'book', key: 'axe', name: '금도끼 은도끼', v: 2 },
+  { t: 'card' },
+  { t: 'book', key: 'kongjwi', name: '콩쥐팥쥐', v: 3 },
+  { t: 'bell', name: '독서 골든벨', sub: '맞히면 +3점' },
+  { t: 'book', key: 'rabbit', name: '별주부전', v: 3 },
+  { t: 'book', key: 'pinocchio', name: '피노키오', v: 3 },
+  { t: 'card' },
+  { t: 'book', key: 'simcheong', name: '심청전', v: 3 },
+  { t: 'late', name: '반납 연체', sub: '한 번 쉬어요' },
+  { t: 'book', key: 'hansel', name: '헨젤과 그레텔', v: 3 },
+  { t: 'book', key: 'gyeonwoo', name: '견우와 직녀', v: 4 },
+  { t: 'card' },
+  { t: 'book', key: 'ant', name: '개미와 베짱이', v: 4 }
+];
+var N = BOARD.length;
+function rc(i) { // grid row/col (1-based) for ring index, clockwise from bottom-right
+  if (i <= 5) return [6, 6 - i];
+  if (i <= 10) return [6 - (i - 5), 1];
+  if (i <= 15) return [1, 1 + (i - 10)];
+  return [1 + (i - 15), 6];
+}
+var COLORS = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)'];
+var LEVELS = { low: '1~2학년', mid: '3~4학년', high: '5~6학년' };
+
+/* ---------- Questions: c[0] is always the answer; shown shuffled ---------- */
+var Q = [
+  // 1~2학년
+  { id: 'l1', lv: 'low', book: 'turtle', cat: '동화', q: '「토끼와 거북이」에서 달리기 경주에서 이긴 동물은?', c: ['거북이', '토끼', '여우', '곰'], ex: '토끼가 낮잠을 자는 동안 거북이가 쉬지 않고 걸어서 이겼어요.' },
+  { id: 'l2', lv: 'low', book: 'heungbu', cat: '동화', q: '「흥부와 놀부」에서 흥부가 다친 다리를 고쳐 준 새는?', c: ['제비', '까치', '참새', '비둘기'], ex: '제비는 고마움의 표시로 박씨를 물어다 주었어요.' },
+  { id: 'l3', lv: 'low', book: 'sunmoon', cat: '동화', q: '「해님 달님」에서 오누이를 쫓아온 동물은?', c: ['호랑이', '곰', '늑대', '여우'], ex: '오누이는 하늘에서 내려온 동아줄을 타고 올라가 해와 달이 되었어요.' },
+  { id: 'l4', lv: 'low', book: 'pigs', cat: '동화', q: '「아기 돼지 삼 형제」에서 늑대가 끝내 무너뜨리지 못한 집은?', c: ['벽돌로 지은 집', '짚으로 지은 집', '나무로 지은 집', '천막으로 지은 집'], ex: '튼튼한 벽돌집은 늑대가 아무리 불어도 끄떡없었어요.' },
+  { id: 'l5', lv: 'low', book: 'axe', cat: '동화', q: '「금도끼 은도끼」에서 나무꾼이 연못에 빠뜨린 도끼는?', c: ['쇠도끼', '금도끼', '은도끼', '돌도끼'], ex: '정직하게 쇠도끼라고 말한 나무꾼은 금도끼와 은도끼까지 받았어요.' },
+  { id: 'l6', lv: 'low', book: 'ant', cat: '동화', q: '「개미와 베짱이」에서 여름 내내 열심히 일한 곤충은?', c: ['개미', '베짱이', '나비', '잠자리'], ex: '개미는 여름에 부지런히 먹이를 모아 겨울을 든든하게 보냈어요.' },
+  { id: 'l7', lv: 'low', book: 'pinocchio', cat: '동화', q: '피노키오는 거짓말을 하면 무엇이 길어질까요?', c: ['코', '귀', '팔', '머리카락'], ex: '피노키오는 거짓말을 할 때마다 코가 쭉쭉 길어졌어요.' },
+  { id: 'l8', lv: 'low', book: 'kongjwi', cat: '동화', q: '「콩쥐팥쥐」에서 깨진 독에 물을 채울 수 있게 구멍을 막아 준 동물은?', c: ['두꺼비', '토끼', '소', '참새'], ex: '두꺼비가 깨진 구멍을 몸으로 막아 주었어요.' },
+  { id: 'l9', lv: 'low', cat: '동화', q: '「해와 바람」에서 나그네의 외투를 벗긴 것은?', c: ['해', '바람', '비', '구름'], ex: '바람이 세게 불수록 나그네는 외투를 꽉 여몄지만, 따뜻한 햇볕에는 스스로 벗었어요.' },
+  { id: 'l10', lv: 'low', cat: '동화', q: '「혹부리 영감」에서 착한 영감의 혹을 떼어 간 것은?', c: ['도깨비', '호랑이', '산신령', '토끼'], ex: '도깨비들은 노래가 혹에서 나온다고 생각했어요.' },
+  { id: 'l11', lv: 'low', cat: '낱말', q: '바르게 쓴 인사말은?', c: ['안녕하세요', '안령하세요', '안녕하새요', '안냥하세요'], ex: '‘안녕하세요’가 바른 글자예요.' },
+  { id: 'l12', lv: 'low', cat: '낱말', q: '바르게 쓴 낱말은?', c: ['책상', '책쌍', '첵상', '책산'], ex: '공부할 때 쓰는 ‘책상’이에요.' },
+  { id: 'l13', lv: 'low', cat: '낱말', q: '‘크다’와 뜻이 반대인 말은?', c: ['작다', '높다', '길다', '많다'], ex: '크다 ↔ 작다' },
+  { id: 'l14', lv: 'low', cat: '낱말', q: '‘기쁘다’와 뜻이 비슷한 말은?', c: ['즐겁다', '슬프다', '무섭다', '아프다'], ex: '기쁘다와 즐겁다는 비슷한 마음을 나타내요.' },
+  { id: 'l15', lv: 'low', cat: '낱말', q: '받침이 있는 낱말은?', c: ['곰', '소', '나비', '오리'], ex: '‘곰’에는 ㅁ 받침이 있어요.' },
+  { id: 'l16', lv: 'low', cat: '낱말', q: '‘개구리’는 몇 글자일까요?', c: ['3글자', '2글자', '4글자', '5글자'], ex: '개-구-리, 세 글자예요.' },
+  { id: 'l17', lv: 'low', cat: '속담', q: '아주 쉬운 일을 뜻하는 말: “누워서 ○ 먹기”', c: ['떡', '밥', '물', '빵'], ex: '‘누워서 떡 먹기’는 아주 쉬운 일을 말해요.' },
+  { id: 'l18', lv: 'low', cat: '사고도구어', q: '여러 물건을 같은 것끼리 모아 나누는 것을 무엇이라고 할까요?', c: ['분류', '계산', '달리기', '노래'], ex: '같은 종류끼리 나누는 것을 ‘분류’라고 해요.' },
+  { id: 'l19', lv: 'low', cat: '사고도구어', q: '사과와 배를 놓고 같은 점과 다른 점을 찾는 것은?', c: ['비교', '분류', '요약', '예측'], ex: '두 가지를 견주어 보는 것을 ‘비교’라고 해요.' },
+  { id: 'l20', lv: 'low', cat: '도서관', q: '도서관에서 지켜야 할 약속은?', c: ['조용히 책 읽기', '뛰어다니기', '큰 소리로 노래하기', '책에 낙서하기'], ex: '도서관은 모두가 함께 쓰는 곳이라 조용히 해요.' },
+  { id: 'l21', lv: 'low', cat: '도서관', q: '책의 맨 앞에서 책 이름과 그림이 있는 겉면을 무엇이라고 할까요?', c: ['표지', '차례', '쪽수', '책갈피'], ex: '책의 얼굴 같은 겉면이 ‘표지’예요.' },
+  { id: 'l22', lv: 'low', cat: '낱말', q: '토끼가 뛰는 모양을 흉내 낸 말은?', c: ['깡충깡충', '엉금엉금', '주룩주룩', '반짝반짝'], ex: '‘엉금엉금’은 거북이가 기어가는 모양이에요.' },
+  // 3~4학년
+  { id: 'm1', lv: 'mid', book: 'rabbit', cat: '동화', q: '「별주부전」에서 자라가 토끼를 데려가려고 한 곳은?', c: ['용궁', '달나라', '깊은 산속', '하늘나라'], ex: '자라는 용왕의 병을 고칠 토끼의 간을 구하러 갔어요.' },
+  { id: 'm2', lv: 'mid', book: 'rabbit', cat: '동화', q: '「별주부전」에서 토끼가 용궁을 빠져나오려고 한 꾀는?', c: ['간을 육지에 두고 왔다고 말했다', '배가 아프다고 했다', '엄마가 기다린다고 했다', '길을 잃었다고 했다'], ex: '토끼는 간을 두고 왔다며 다시 육지로 돌아갔어요.' },
+  { id: 'm3', lv: 'mid', book: 'simcheong', cat: '동화', q: '「심청전」에서 심청이가 공양미 삼백 석으로 고치려 한 것은?', c: ['아버지의 눈', '어머니의 병', '무너진 집', '부서진 배'], ex: '심청이는 앞을 못 보는 아버지의 눈을 뜨게 하고 싶었어요.' },
+  { id: 'm4', lv: 'mid', book: 'hansel', cat: '동화', q: '「헨젤과 그레텔」에서 남매가 숲속에서 발견한 집은 무엇으로 만들어졌나요?', c: ['과자', '벽돌', '얼음', '돌'], ex: '과자로 만든 집에는 마녀가 살고 있었어요.' },
+  { id: 'm5', lv: 'mid', book: 'gyeonwoo', cat: '동화', q: '「견우와 직녀」가 칠월 칠석에 만나도록 다리를 놓아 준 새는?', c: ['까마귀와 까치', '참새와 제비', '독수리와 매', '학과 두루미'], ex: '까마귀와 까치가 놓은 다리를 ‘오작교’라고 해요.' },
+  { id: 'm6', lv: 'mid', book: 'turtle', cat: '동화', q: '「토끼와 거북이」가 주는 교훈은?', c: ['꾸준히 노력하면 해낼 수 있다', '빨리 달리는 것이 최고다', '잠을 많이 자야 한다', '경주는 위험하다'], ex: '느려도 쉬지 않고 노력한 거북이가 이겼어요.' },
+  { id: 'm7', lv: 'mid', book: 'pinocchio', cat: '동화', q: '나무 인형 피노키오를 만든 사람은?', c: ['제페토 할아버지', '흥부', '심 봉사', '나무꾼'], ex: '제페토 할아버지가 나무를 깎아 피노키오를 만들었어요.' },
+  { id: 'm8', lv: 'mid', cat: '속담', q: '“가는 말이 고와야 ○○ 말이 곱다”', c: ['오는', '하는', '듣는', '쓰는'], ex: '내가 남에게 좋게 말해야 남도 나에게 좋게 말한다는 뜻이에요.' },
+  { id: 'm9', lv: 'mid', cat: '속담', q: '“티끌 모아 ○○”', c: ['태산', '바다', '들판', '강물'], ex: '작은 것도 모이면 큰 것이 된다는 뜻이에요.' },
+  { id: 'm10', lv: 'mid', cat: '속담', q: '“원숭이도 나무에서 떨어진다”의 뜻은?', c: ['아무리 잘하는 사람도 실수할 때가 있다', '원숭이는 나무를 싫어한다', '높은 곳은 언제나 위험하다', '원숭이는 장난을 좋아한다'], ex: '잘하는 일이라도 방심하지 말라는 뜻이에요.' },
+  { id: 'm11', lv: 'mid', cat: '맞춤법', q: '바르게 쓴 것은?', c: ['오늘이 며칠이지?', '오늘이 몇일이지?', '오늘이 몇칠이지?', '오늘이 멷일이지?'], ex: '‘며칠’이 바른 표기예요.' },
+  { id: 'm12', lv: 'mid', cat: '맞춤법', q: '바르게 쓴 것은?', c: ['금세 다 읽었다', '금새 다 읽었다', '끔새 다 읽었다', '금쌔 다 읽었다'], ex: '‘금시에’가 줄어든 말이라 ‘금세’라고 써요.' },
+  { id: 'm13', lv: 'mid', cat: '맞춤법', q: '바르게 쓴 것은?', c: ['왠지 기분이 좋다', '웬지 기분이 좋다', '왼지 기분이 좋다', '웬찌 기분이 좋다'], ex: '‘왜인지’가 줄어든 말이라 ‘왠지’라고 써요.' },
+  { id: 'm14', lv: 'mid', cat: '사고도구어', q: '“비가 많이 와서 길이 미끄러웠다.”에서 길이 미끄러운 원인은?', c: ['비가 많이 와서', '길이 미끄러웠다', '우산을 썼다', '학교에 갔다'], ex: '어떤 일이 일어나게 한 까닭을 ‘원인’이라고 해요.' },
+  { id: 'm15', lv: 'mid', cat: '사고도구어', q: '앞으로 일어날 일을 미리 짐작해 보는 것은?', c: ['예측', '회상', '분류', '묘사'], ex: '이야기 뒷부분을 짐작하며 읽는 것도 ‘예측’이에요.' },
+  { id: 'm16', lv: 'mid', cat: '사고도구어', q: '글의 중요한 내용만 간추려 짧게 정리하는 것은?', c: ['요약', '확장', '반복', '낭독'], ex: '중요한 내용만 간추리는 것을 ‘요약’이라고 해요.' },
+  { id: 'm17', lv: 'mid', cat: '사고도구어', q: '기준을 정해 같은 종류끼리 나누는 것은?', c: ['분류', '요약', '예측', '비교'], ex: '예) 동물을 ‘다리 수’ 기준으로 나누기' },
+  { id: 'm18', lv: 'mid', cat: '도서관', q: '책 등에 붙은 번호(청구기호)는 무엇을 알려 줄까요?', c: ['책이 꽂혀 있는 자리', '책의 가격', '책의 무게', '읽은 사람 수'], ex: '청구기호를 보면 서가에서 책을 찾을 수 있어요.' },
+  { id: 'm19', lv: 'mid', cat: '도서관', q: '책 앞부분에서 내용의 순서와 쪽수를 알려 주는 곳은?', c: ['차례', '표지', '책날개', '뒤표지'], ex: '‘차례(목차)’를 보면 원하는 내용을 빨리 찾을 수 있어요.' },
+  { id: 'm20', lv: 'mid', cat: '높임말', q: '알맞은 말은? “할머니께서 진지를 ○○.”', c: ['드신다', '먹는다', '먹었니', '먹자'], ex: '어른께는 ‘드시다’, ‘잡수시다’를 써요.' },
+  { id: 'm21', lv: 'mid', cat: '낱말', q: '소리를 흉내 낸 말은?', c: ['주룩주룩', '엉금엉금', '깡충깡충', '살금살금'], ex: '‘주룩주룩’은 비가 내리는 소리를 흉내 낸 말이에요.' },
+  { id: 'm22', lv: 'mid', book: 'kongjwi', cat: '동화', q: '「콩쥐팥쥐」에서 콩쥐가 잃어버렸다가 원님을 만나게 된 물건은?', c: ['꽃신 한 짝', '머리핀', '부채', '목걸이'], ex: '잃어버린 꽃신 덕분에 콩쥐는 원님을 만났어요.' },
+  // 5~6학년
+  { id: 'h1', lv: 'high', cat: '속담', q: '“소 잃고 외양간 고친다”의 뜻은?', c: ['일이 잘못된 뒤에 손을 써도 소용없다', '소를 잘 키워야 한다', '집은 자주 고쳐야 한다', '부지런히 일해야 한다'], ex: '미리 대비하는 것이 중요하다는 뜻이에요.' },
+  { id: 'h2', lv: 'high', cat: '속담', q: '“등잔 밑이 어둡다”의 뜻은?', c: ['가까이 있는 것을 오히려 잘 모른다', '밤에는 불을 켜야 한다', '등잔은 위험하다', '어두운 곳을 조심해야 한다'], ex: '가까운 곳의 일을 더 모를 때 쓰는 말이에요.' },
+  { id: 'h3', lv: 'high', cat: '관용 표현', q: '“발이 넓다”의 뜻은?', c: ['아는 사람이 많다', '발 크기가 크다', '걸음이 빠르다', '여행을 자주 간다'], ex: '사귀어 아는 사람이 많을 때 쓰는 말이에요.' },
+  { id: 'h4', lv: 'high', cat: '관용 표현', q: '“입이 무겁다”의 뜻은?', c: ['말을 함부로 옮기지 않는다', '말을 잘 못한다', '음식을 많이 먹는다', '입이 아프다'], ex: '비밀을 잘 지키는 사람에게 쓰는 말이에요.' },
+  { id: 'h5', lv: 'high', cat: '사고도구어', q: '이미 아는 사실을 바탕으로 새로운 판단을 이끌어 내는 것은?', c: ['추론', '암기', '낭독', '요약'], ex: '글에 직접 나오지 않은 내용을 짐작하는 것도 추론이에요.' },
+  { id: 'h6', lv: 'high', cat: '사고도구어', q: '주장이 옳다는 것을 뒷받침하는 까닭은?', c: ['근거', '결론', '제목', '예측'], ex: '좋은 주장에는 믿을 만한 근거가 필요해요.' },
+  { id: 'h7', lv: 'high', cat: '사고도구어', q: '어떤 대상을 바라보고 생각하는 입장은?', c: ['관점', '결과', '순서', '분류'], ex: '같은 일도 관점에 따라 다르게 볼 수 있어요.' },
+  { id: 'h8', lv: 'high', cat: '사고도구어', q: '두 대상의 차이점을 중심으로 설명하는 방법은?', c: ['대조', '비교', '예시', '나열'], ex: '비교는 같은 점, 대조는 다른 점에 주목해요.' },
+  { id: 'h9', lv: 'high', cat: '사고도구어', q: '원인과 결과로 이어진 관계를 무엇이라고 할까요?', c: ['인과', '대조', '나열', '분류'], ex: '‘인과 관계’라고도 해요.' },
+  { id: 'h10', lv: 'high', cat: '맞춤법', q: '바르게 쓴 것은?', c: ['내일 가도 돼요?', '내일 가도 되요?', '내일 가도 됬요?', '내일 가도 뒈요?'], ex: '‘되어요’가 줄어든 말이 ‘돼요’예요.' },
+  { id: 'h11', lv: 'high', cat: '맞춤법', q: '바르게 쓴 것은?', c: ['감기가 빨리 낫길 바라.', '감기가 빨리 낳길 바라.', '감기가 빨리 났길 바라.', '감기가 빨리 낮길 바라.'], ex: '병이 좋아지는 것은 ‘낫다’예요.' },
+  { id: 'h12', lv: 'high', cat: '맞춤법', q: '바르게 쓴 것은?', c: ['퀴즈 정답을 맞혔다.', '퀴즈 정답을 맞췄다.', '퀴즈 정답을 마쳤다.', '퀴즈 정답을 맏혔다.'], ex: '문제의 답을 틀리지 않게 하는 것은 ‘맞히다’예요.' },
+  { id: 'h13', lv: 'high', cat: '맞춤법', q: '바르게 쓴 것은?', c: ['이제 어떻게 해?', '이제 어떡게 해?', '이제 어떻해?', '이제 어떻케 해?'], ex: '‘어떻게 해’ 또는 줄여서 ‘어떡해’라고 써요.' },
+  { id: 'h14', lv: 'high', book: 'rabbit', cat: '고전', q: '「별주부전」 이야기를 판소리로 부른 것은?', c: ['수궁가', '춘향가', '흥보가', '적벽가'], ex: '용궁(수궁)에서 벌어지는 이야기라 ‘수궁가’예요.' },
+  { id: 'h15', lv: 'high', book: 'heungbu', cat: '고전', q: '「흥부와 놀부」 이야기를 판소리로 부른 것은?', c: ['흥보가', '수궁가', '심청가', '적벽가'], ex: '판소리 다섯 마당 중 하나인 ‘흥보가’예요.' },
+  { id: 'h16', lv: 'high', book: 'simcheong', cat: '고전', q: '「심청전」에서 심청이가 다시 살아나 나오게 된 꽃은?', c: ['연꽃', '장미', '해바라기', '국화'], ex: '심청이는 연꽃을 타고 다시 세상으로 돌아왔어요.' },
+  { id: 'h17', lv: 'high', book: 'ant', cat: '세계 명작', q: '「개미와 베짱이」는 누구의 우화로 알려져 있나요?', c: ['이솝', '안데르센', '그림 형제', '셰익스피어'], ex: '「토끼와 거북이」, 「해와 바람」도 이솝 우화예요.' },
+  { id: 'h18', lv: 'high', book: 'hansel', cat: '세계 명작', q: '「헨젤과 그레텔」을 모아 펴낸 사람은?', c: ['그림 형제', '안데르센', '이솝', '톨스토이'], ex: '독일의 그림 형제가 옛이야기를 모아 펴냈어요.' },
+  { id: 'h19', lv: 'high', cat: '세계 명작', q: '「인어 공주」를 쓴 작가는?', c: ['안데르센', '이솝', '그림 형제', '톨스토이'], ex: '덴마크 작가 안데르센의 작품이에요.' },
+  { id: 'h20', lv: 'high', cat: '고전', q: '「홍길동전」을 지은 사람으로 알려진 인물은?', c: ['허균', '김만중', '박지원', '정약용'], ex: '홍길동전은 한글로 쓰인 소설로 알려져 있어요.' },
+  { id: 'h21', lv: 'high', cat: '이야기', q: '이야기에서 갈등이 가장 높아지는 단계는?', c: ['절정', '발단', '전개', '결말'], ex: '발단 → 전개 → 위기 → 절정 → 결말' },
+  { id: 'h22', lv: 'high', cat: '표현', q: '“내 마음은 호수요”처럼 다른 대상에 빗대어 표현하는 방법은?', c: ['비유', '반복', '열거', '질문'], ex: '마음을 호수에 빗댄 비유 표현이에요.' },
+  { id: 'h23', lv: 'high', book: 'gyeonwoo', cat: '고전', q: '견우와 직녀가 만나는 날로 알려진 날은?', c: ['음력 7월 7일 칠석', '음력 1월 1일 설날', '음력 8월 15일 추석', '음력 5월 5일 단오'], ex: '오작교를 건너 일 년에 한 번 만나는 날이에요.' }
+];
+var QMAP = {}; Q.forEach(function (x) { QMAP[x.id] = x; });
+
+var CARDS = [
+  { id: 'help', text: '도서관 정리를 도왔어요!', fx: '+2점', pts: 2 },
+  { id: 'finish', text: '책 한 권을 끝까지 다 읽었어요!', fx: '+3점', pts: 3 },
+  { id: 'lateret', text: '반납일을 깜빡했어요.', fx: '-1점', pts: -1 },
+  { id: 'jump', text: '책 속 지름길을 찾았어요!', fx: '2칸 앞으로', move: 2 },
+  { id: 'again', text: '독서 열정이 넘쳐요!', fx: '주사위 한 번 더', again: true },
+  { id: 'home', text: '책가방을 챙겨 출발 칸으로!', fx: '출발 칸으로 이동 +2점', toStart: true }
+];
+var CMAP = {}; CARDS.forEach(function (x) { CMAP[x.id] = x; });
+
+/* ---------- Helpers ---------- */
+function $(id) { return document.getElementById(id); }
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+function rnd(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = rnd(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]; }); }
+function ssGet(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+function ssSet(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+var OFFSET = 0; // server clock offset from Firebase, so every tablet shares one game timer
+function NOW() { return new Date().getTime() + OFFSET; }
+var CLIENT = ssGet('bm-client') || ('c' + new Date().getTime().toString(36) + Math.random().toString(36).slice(2, 8));
+ssSet('bm-client', CLIENT);
+function tokenHTML(i, label, small) {
+  return '<span class="token" style="background:' + COLORS[i % 4] + '" aria-hidden="true">' + esc(label || String(i + 1)) + '</span>';
+}
+
+/* ---------- Game engine (pure state transforms) ---------- */
+function blankRoom(code, mode) {
+  return { v: 1, mode: mode, code: code, phase: 'lobby', players: [], level: 'mid', minutes: 10, owners: {}, turn: 0, turnSeq: 0, used: [], log: [], dice: null, q: null, card: null, notice: null, result: null, again: false, startedAt: 0, endsAt: 0, updatedAt: NOW(), createdAt: NOW() };
+}
+function addLog(st, msg) { st.log.unshift(msg); if (st.log.length > 8) st.log.length = 8; }
+function startGame(st) {
+  st.players.forEach(function (p) { p.pos = 0; p.score = 0; p.skip = false; });
+  st.owners = {}; st.turn = 0; st.turnSeq = 1; st.used = []; st.log = []; st.dice = null; st.q = null; st.card = null; st.notice = null; st.result = null; st.again = false;
+  st.startedAt = NOW(); st.endsAt = st.startedAt + st.minutes * 60000; st.phase = 'roll';
+  addLog(st, '게임 시작! ' + st.players[0].name + '부터 주사위를 굴려요.');
+  return st;
+}
+function pickQuestion(st, bookKey) {
+  var pool = Q.filter(function (x) { return x.lv === st.level && st.used.indexOf(x.id) < 0; });
+  if (!pool.length) { st.used = st.used.filter(function (id) { return QMAP[id].lv !== st.level; }); pool = Q.filter(function (x) { return x.lv === st.level; }); }
+  var match = bookKey ? pool.filter(function (x) { return x.book === bookKey; }) : [];
+  var src = match.length ? match : pool;
+  var q = src[rnd(src.length)];
+  st.used.push(q.id);
+  return { id: q.id, order: shuffle([0, 1, 2, 3]) };
+}
+function moveBy(st, p, steps) {
+  var from = p.pos, to = (from + steps) % N;
+  if (from + steps >= N) { p.score += 2; addLog(st, p.name + ' 출발 칸을 지나 +2점'); }
+  p.pos = to;
+}
+function doRoll(st, roll) {
+  var p = st.players[st.turn];
+  st.dice = { v: roll, seq: st.turnSeq };
+  moveBy(st, p, roll);
+  var sq = BOARD[p.pos];
+  if (sq.t === 'book' || sq.t === 'bell') {
+    var pq = pickQuestion(st, sq.key);
+    st.q = { id: pq.id, order: pq.order, kind: sq.t, sq: p.pos };
+    st.phase = 'quiz';
+  } else if (sq.t === 'card') {
+    var c = CARDS[rnd(CARDS.length)];
+    st.card = { id: c.id };
+    if (c.pts) { p.score = Math.max(0, p.score + c.pts); }
+    if (c.move) { moveBy(st, p, c.move); }
+    if (c.toStart) { moveBy(st, p, N - p.pos); }
+    if (c.again) { st.again = true; }
+    addLog(st, p.name + ' 책갈피 카드: ' + c.text + ' (' + c.fx + ')');
+    st.phase = 'card';
+  } else if (sq.t === 'rest') {
+    p.score += 1; st.notice = { title: '도서관 쉼터', text: '책 냄새를 맡으며 쉬어요. +1점' }; addLog(st, p.name + ' 도서관 쉼터에서 +1점'); st.phase = 'notice';
+  } else if (sq.t === 'late') {
+    p.skip = true; st.notice = { title: '반납 연체', text: '책을 늦게 반납했어요. 다음 차례에 한 번 쉬어요.' }; addLog(st, p.name + ' 반납 연체! 다음에 한 번 쉬어요'); st.phase = 'notice';
+  } else {
+    st.notice = { title: '출발', text: '출발 칸에 도착했어요!' }; st.phase = 'notice';
+  }
+  return st;
+}
+function answer(st, choice) {
+  var p = st.players[st.turn], q = QMAP[st.q.id], sq = BOARD[st.q.sq];
+  var correct = st.q.order[choice] === 0, msg;
+  if (st.q.kind === 'bell') {
+    if (correct) { p.score += 3; msg = '골든벨 성공! +3점'; } else { msg = '아쉬워요! 다음 기회에 도전해요.'; }
+  } else {
+    var owner = st.owners[st.q.sq];
+    if (owner == null) {
+      if (correct) { st.owners[st.q.sq] = st.turn; p.score += sq.v; msg = '정답! 「' + sq.name + '」 책을 모았어요. +' + sq.v + '점'; }
+      else { msg = '아쉬워요! 「' + sq.name + '」 책은 아직 주인이 없어요.'; }
+    } else if (owner === st.turn) {
+      if (correct) { p.score += 1; msg = '정답! 내 책을 다시 읽었어요. +1점'; } else { msg = '아쉬워요! 다음에 다시 읽어 봐요.'; }
+    } else {
+      var o = st.players[owner]; o.score += 1;
+      msg = o.name + '의 책을 함께 읽어서 ' + o.name + ' +1점.';
+      if (correct) { p.score += 1; msg += ' 정답이라 ' + p.name + '도 +1점!'; }
+    }
+  }
+  st.result = { choice: choice, correct: correct, msg: msg };
+  addLog(st, p.name + ': ' + msg);
+  st.phase = 'result';
+  return st;
+}
+function finishTurn(st) {
+  st.q = null; st.card = null; st.notice = null; st.result = null;
+  if (NOW() >= st.endsAt) { st.phase = 'ended'; addLog(st, '시간 끝! 게임이 끝났어요.'); return st; }
+  st.turnSeq += 1;
+  if (st.again) { st.again = false; st.phase = 'roll'; return st; }
+  var n = st.players.length, next = (st.turn + 1) % n;
+  if (n > 1 && st.players[next].skip) { st.players[next].skip = false; addLog(st, st.players[next].name + ' 반납 연체로 한 번 쉬어요'); next = (next + 1) % n; }
+  else if (n === 1) { st.players[0].skip = false; }
+  st.turn = next; st.phase = 'roll';
+  return st;
+}
+function booksOf(st, i) { var c = 0; for (var k in st.owners) { if (st.owners[k] === i) c++; } return c; }
+function ranking(st) {
+  return st.players.map(function (p, i) { return { i: i, p: p, books: booksOf(st, i) }; }).sort(function (a, b) { return b.p.score - a.p.score || b.books - a.books; });
+}
+
+/* ---------- Stores ---------- */
+function LocalStore(state) { this.state = state; this.subs = []; }
+LocalStore.prototype.subscribe = function (fn) { this.subs.push(fn); fn(this.state); };
+LocalStore.prototype.mutate = function (fn) {
+  var next = fn(clone(this.state));
+  if (next) { next.updatedAt = NOW(); this.state = next; var s = this.state; this.subs.forEach(function (f) { f(s); }); }
+  return Promise.resolve(next);
+};
+LocalStore.prototype.close = function () { this.subs = []; };
+
+/* Firebase Realtime Database drops empty arrays/objects and may turn number-keyed objects into arrays; normalise on every read. */
+function arr(x) {
+  if (!x) return [];
+  if (Array.isArray(x)) return x.filter(function (v) { return v != null; });
+  return Object.keys(x).sort(function (a, b) { return a - b; }).map(function (k) { return x[k]; });
+}
+function norm(d) {
+  d = clone(d);
+  d.players = arr(d.players); d.log = arr(d.log); d.used = arr(d.used);
+  var o = {};
+  if (Array.isArray(d.owners)) { d.owners.forEach(function (v, i) { if (v != null) o[i] = v; }); }
+  else if (d.owners) { for (var k in d.owners) o[k] = d.owners[k]; }
+  d.owners = o;
+  ['q', 'card', 'notice', 'result', 'dice'].forEach(function (k) { if (d[k] === undefined) d[k] = null; });
+  if (d.q) d.q.order = arr(d.q.order);
+  d.again = !!d.again;
+  d.players.forEach(function (p) { p.skip = !!p.skip; p.score = p.score || 0; p.pos = p.pos || 0; });
+  return d;
+}
+function DbStore(db, code) { this.db = db; this.code = code; this.ref = db.ref('rooms/' + code); this.cb = null; }
+DbStore.prototype.subscribe = function (fn, onErr) {
+  this.cb = function (snap) { var d = snap.val(); if (d && d.v) fn(norm(d)); };
+  this.ref.on('value', this.cb, function (e) { if (onErr) onErr(e); });
+};
+/* One atomic read-modify-write. fn(null) may be a cold-cache guess: answering null lets Firebase retry with the real room. */
+DbStore.prototype.mutate = function (fn) {
+  var changed = false;
+  return this.ref.transaction(function (cur) {
+    var st = cur && cur.v ? norm(cur) : null;
+    var next = fn(st);
+    if (!next) { changed = false; return cur === null ? null : undefined; }
+    changed = true;
+    next.updatedAt = NOW();
+    return JSON.parse(JSON.stringify(next));
+  }, null, false).then(function (res) {
+    if (res.committed && changed) { var d = res.snapshot.val(); return d && d.v ? norm(d) : null; }
+    return null;
+  });
+};
+DbStore.prototype.close = function () { if (this.cb) { this.ref.off('value', this.cb); this.cb = null; } };
+
+/* ---------- App state ---------- */
+var DB = null;            // db namespace when online play is available
+var store = null;         // active store
+var S = null;             // latest room state
+var mode = null;          // 'online' | 'local'
+var shown = {};           // player index -> displayed position (for hop animation)
+var animTimer = null;
+var rolling = false;
+var scheduled = {};
+var setup = { names: ['', '', '', ''], level: 'mid', minutes: 10 };
+
+function showScreen(id) {
+  ['s-home', 's-setup', 's-lobby', 's-game'].forEach(function (s) { $(s).hidden = s !== id; });
+}
+function myIndex() {
+  if (!S) return -1;
+  if (mode === 'local') return S.turn;
+  for (var i = 0; i < S.players.length; i++) { if (S.players[i].id === CLIENT) return i; }
+  return -1;
+}
+function isMyTurn() { return S && (mode === 'local' || myIndex() === S.turn); }
+function isHost() { return S && (mode === 'local' || (S.players[0] && S.players[0].id === CLIENT)); }
+
+/* ---------- Options UI (level / minutes) ---------- */
+function optionsHTML(level, minutes, editable) {
+  var lv = Object.keys(LEVELS).map(function (k) { return '<button type="button" data-level="' + k + '" aria-pressed="' + (k === level) + '"' + (editable ? '' : ' disabled') + '>' + LEVELS[k] + '</button>'; }).join('');
+  var mn = [5, 10, 15].map(function (m) { return '<button type="button" data-min="' + m + '" aria-pressed="' + (m === minutes) + '"' + (editable ? '' : ' disabled') + '>' + m + '분</button>'; }).join('');
+  return '<h2>게임 설정</h2><div class="field"><span style="font-weight:700;font-size:14px">문제 수준</span><div class="seg">' + lv + '</div></div>' +
+    '<div class="field"><span style="font-weight:700;font-size:14px">게임 시간</span><div class="seg">' + mn + '</div></div>' +
+    (editable ? '' : '<p class="note" style="margin:0">설정은 방을 만든 친구가 정해요.</p>');
+}
+
+/* ---------- Home ---------- */
+function getName() { return ($('nameInput').value || '').trim().slice(0, 6); }
+$('nameInput').value = lsGet('bm-name') || '';
+$('nameInput').addEventListener('input', function () { lsSet('bm-name', $('nameInput').value); });
+$('codeInput').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 4); });
+
+$('btnLocal').addEventListener('click', function () {
+  var nm = getName();
+  if (nm && !setup.names[0]) setup.names[0] = nm;
+  renderSetup(); showScreen('s-setup');
+});
+$('btnSetupBack').addEventListener('click', function () { showScreen('s-home'); });
+
+function renderSetup() {
+  $('localNames').innerHTML = [0, 1, 2, 3].map(function (i) {
+    return '<div class="slot filled" style="padding:8px 10px">' + tokenHTML(i) + '<input id="ln' + i + '" aria-label="' + (i + 1) + '번 친구 이름" maxlength="6" autocomplete="off" placeholder="' + (i + 1) + '번 친구" value="' + esc(setup.names[i]) + '" style="flex:1;min-width:0;font-size:17px;padding:8px 10px;border:2px solid var(--line);border-radius:10px"></div>';
+  }).join('');
+  [0, 1, 2, 3].forEach(function (i) { $('ln' + i).addEventListener('input', function () { setup.names[i] = this.value; }); });
+  $('setupOptions').innerHTML = optionsHTML(setup.level, setup.minutes, true);
+}
+$('setupOptions').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.level) setup.level = b.dataset.level;
+  if (b.dataset.min) setup.minutes = +b.dataset.min;
+  $('setupOptions').innerHTML = optionsHTML(setup.level, setup.minutes, true);
+});
+$('btnLocalStart').addEventListener('click', function () {
+  var names = setup.names.map(function (s) { return (s || '').trim().slice(0, 6); }).filter(Boolean);
+  if (names.length < 2) { $('setupErr').textContent = '이름을 2명 이상 적어 주세요.'; return; }
+  $('setupErr').textContent = '';
+  var st = blankRoom('', 'local'); st.level = setup.level; st.minutes = setup.minutes;
+  st.players = names.map(function (n, i) { return { id: 'local' + i, name: n, pos: 0, score: 0, skip: false }; });
+  startGame(st);
+  enterRoom(new LocalStore(st), 'local');
+});
+
+$('btnCreate').addEventListener('click', async function () {
+  var nm = getName(); if (!nm) { $('homeErr').textContent = '먼저 내 이름을 적어 주세요.'; $('nameInput').focus(); return; }
+  if (!DB) return;
+  $('homeErr').textContent = ''; this.disabled = true;
+  try {
+    for (var t = 0; t < 8; t++) {
+      var code = String(1000 + rnd(9000));
+      var s = new DbStore(DB, code);
+      var made = await s.mutate(function (cur) {
+        if (cur && cur.phase !== 'ended' && NOW() - (cur.updatedAt || 0) < 3 * 3600000) return null;
+        var st = blankRoom(code, 'online');
+        st.players.push({ id: CLIENT, name: nm, pos: 0, score: 0, skip: false });
+        addLog(st, nm + '이(가) 방을 만들었어요.');
+        return st;
+      });
+      if (made) { enterRoom(s, 'online'); return; }
+    }
+    $('homeErr').textContent = '방을 만들지 못했어요. 잠시 뒤 다시 눌러 주세요.';
+  } catch (e) { $('homeErr').textContent = '연결이 원활하지 않아요. 잠시 뒤 다시 눌러 주세요.'; }
+  finally { this.disabled = !DB; }
+});
+
+$('btnJoin').addEventListener('click', async function () {
+  var nm = getName(); if (!nm) { $('homeErr').textContent = '먼저 내 이름을 적어 주세요.'; $('nameInput').focus(); return; }
+  var code = $('codeInput').value; if (!/^\d{4}$/.test(code)) { $('homeErr').textContent = '방 번호 4자리를 넣어 주세요.'; return; }
+  if (!DB) return;
+  $('homeErr').textContent = ''; this.disabled = true;
+  var why = '';
+  try {
+    var s = new DbStore(DB, code);
+    var res = await s.mutate(function (cur) {
+      if (!cur) { why = '그 번호의 방이 없어요. 번호를 다시 확인해 주세요.'; return null; }
+      for (var i = 0; i < cur.players.length; i++) { if (cur.players[i].id === CLIENT) { why = 'already'; return null; } }
+      if (cur.phase !== 'lobby') { why = '이미 게임이 시작된 방이에요.'; return null; }
+      if (cur.players.length >= 4) { why = '방이 꽉 찼어요. (최대 4명)'; return null; }
+      cur.players.push({ id: CLIENT, name: nm, pos: 0, score: 0, skip: false });
+      addLog(cur, nm + '이(가) 들어왔어요.');
+      return cur;
+    });
+    if (res || why === 'already') { enterRoom(s, 'online'); return; }
+    $('homeErr').textContent = why;
+  } catch (e) { $('homeErr').textContent = '연결이 원활하지 않아요. 잠시 뒤 다시 눌러 주세요.'; }
+  finally { this.disabled = !DB; }
+});
+
+function enterRoom(s, m) {
+  if (store) store.close();
+  store = s; mode = m; S = null; shown = {}; scheduled = {};
+  if (m === 'online') ssSet('bm-room', s.code); else ssSet('bm-room', null);
+  store.subscribe(onState, function () { $('lobbyErr').textContent = '연결이 끊겼어요. 화면을 새로 고쳐 주세요.'; });
+}
+function leaveRoom() {
+  if (store) store.close();
+  store = null; S = null; mode = null; ssSet('bm-room', null);
+  $('overlay').hidden = true; showScreen('s-home');
+}
+
+/* ---------- Lobby ---------- */
+$('lobbyOptions').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b || !isHost() || !store) return;
+  var lv = b.dataset.level, mn = b.dataset.min ? +b.dataset.min : 0;
+  store.mutate(function (st) { if (!st || st.phase !== 'lobby') return null; if (lv) st.level = lv; if (mn) st.minutes = mn; return st; }).catch(function () {});
+});
+$('btnStart').addEventListener('click', function () {
+  if (!store || !isHost()) return;
+  store.mutate(function (st) { if (!st || st.phase !== 'lobby' || st.players.length < 2) return null; return startGame(st); }).catch(function () { $('lobbyErr').textContent = '연결이 원활하지 않아요. 다시 눌러 주세요.'; });
+});
+$('btnLeave').addEventListener('click', function () {
+  var s = store;
+  if (s && mode === 'online') {
+    s.mutate(function (st) {
+      if (!st || st.phase !== 'lobby') return null;
+      st.players = st.players.filter(function (p) { return p.id !== CLIENT; });
+      return st;
+    }).catch(function () {});
+  }
+  leaveRoom();
+});
+function renderLobby() {
+  $('lobbyCode').textContent = S.code;
+  var html = '';
+  for (var i = 0; i < 4; i++) {
+    var p = S.players[i];
+    html += p ? '<div class="slot filled">' + tokenHTML(i) + '<span>' + esc(p.name) + '</span>' + (p.id === CLIENT ? '<span class="me-tag">나</span>' : '') + (i === 0 ? '<span class="note">방장</span>' : '') + '</div>'
+              : '<div class="slot">' + tokenHTML(i) + '<span>기다리는 중…</span></div>';
+  }
+  $('lobbySlots').innerHTML = html;
+  $('lobbyOptions').innerHTML = optionsHTML(S.level, S.minutes, isHost());
+  var host = isHost();
+  $('btnStart').hidden = !host;
+  $('btnStart').disabled = S.players.length < 2;
+  $('lobbyWait').textContent = host ? (S.players.length < 2 ? '친구가 1명 이상 들어와야 시작할 수 있어요.' : '') : '방장이 게임을 시작할 때까지 기다려요.';
+}
+
+/* ---------- Board ---------- */
+function buildBoard() {
+  var html = '';
+  for (var i = 0; i < N; i++) {
+    var sq = BOARD[i], pos = rc(i), cls = 'cell', inner = '';
+    if (sq.t === 'book') { inner = '<span class="band"></span><span class="title">' + esc(sq.name) + '</span><span class="val">' + sq.v + '점</span><span class="own" hidden></span>'; }
+    else if (sq.t === 'card') { cls += ' card'; inner = '<span class="mark" aria-hidden="true"></span><span class="title">책갈피<br>카드</span>'; }
+    else { cls += ' corner c-' + sq.t; inner = '<span class="title">' + esc(sq.name) + '</span><span class="val">' + esc(sq.sub) + '</span>'; }
+    html += '<div class="' + cls + '" id="cell' + i + '" style="grid-row:' + pos[0] + ';grid-column:' + pos[1] + '">' + inner + '<div class="tokens"></div></div>';
+  }
+  html += '<div class="center" id="center"></div>';
+  $('board').innerHTML = html;
+}
+buildBoard();
+var PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+function diceHTML(v, isRolling) {
+  var on = PIPS[v] || [];
+  var s = '<div class="dice' + (isRolling ? ' rolling' : '') + '" id="dice" role="img" aria-label="주사위 ' + (v || '') + '">';
+  for (var i = 0; i < 9; i++) s += '<i class="' + (on.indexOf(i) >= 0 ? 'on' : '') + '"></i>';
+  return s + '</div>';
+}
+function renderBoard() {
+  for (var i = 0; i < N; i++) {
+    var sq = BOARD[i], cell = $('cell' + i);
+    if (sq.t === 'book') {
+      var o = S.owners[i];
+      var band = cell.querySelector('.band'), own = cell.querySelector('.own');
+      if (o != null && S.players[o]) { band.style.background = COLORS[o]; own.hidden = false; own.style.background = COLORS[o]; own.textContent = String(o + 1); cell.classList.add('owned'); cell.setAttribute('aria-label', sq.name + ', ' + S.players[o].name + '의 책'); }
+      else { band.style.background = ''; own.hidden = true; cell.classList.remove('owned'); cell.setAttribute('aria-label', sq.name + ', ' + sq.v + '점'); }
+    }
+    cell.querySelector('.tokens').innerHTML = '';
+    cell.classList.remove('here');
+  }
+  S.players.forEach(function (p, i) {
+    var at = shown[i] == null ? p.pos : shown[i];
+    var c = $('cell' + at); if (!c) return;
+    c.querySelector('.tokens').insertAdjacentHTML('beforeend', tokenHTML(i));
+    if (i === S.turn && S.phase !== 'ended') c.classList.add('here');
+  });
+}
+function renderCenter() {
+  var p = S.players[S.turn] || S.players[0], mine = isMyTurn();
+  var turnLine = '<div class="turn">' + tokenHTML(S.turn) + '<span>' + esc(p.name) + (mode === 'online' && mine ? ' (나)' : '') + ' 차례</span></div>';
+  var dv = rolling ? (1 + rnd(6)) : (S.dice ? S.dice.v : 1);
+  var body = '';
+  if (S.phase === 'roll') {
+    if (mine) body = '<button class="btn gold" id="btnRoll" type="button"' + (rolling ? ' disabled' : '') + '>주사위 굴리기</button>';
+    else body = '<div class="msg">' + esc(p.name) + '이(가) 주사위를 굴릴 차례예요.</div>';
+  } else if (S.phase === 'quiz') {
+    body = '<div class="msg">' + esc(p.name) + '이(가) 퀴즈를 푸는 중이에요.</div>';
+  } else if (S.phase === 'ended') {
+    body = '<div class="msg">게임이 끝났어요!</div>';
+  } else {
+    body = '<div class="msg">' + esc(S.log[0] || '') + '</div>';
+  }
+  var stuck = mode === 'online' && S.phase !== 'ended' && NOW() - S.updatedAt > 30000;
+  if (stuck) body += '<button class="btn small" id="btnSkip" type="button">차례 넘기기</button>';
+  $('center').innerHTML = turnLine + diceHTML(dv, rolling) + body;
+  var br = $('btnRoll'); if (br) br.addEventListener('click', onRoll);
+  var bs = $('btnSkip'); if (bs) bs.addEventListener('click', onSkip);
+}
+function renderSide() {
+  $('scores').innerHTML = S.players.map(function (p, i) {
+    var me = mode === 'online' && p.id === CLIENT;
+    return '<div class="score' + (i === S.turn && S.phase !== 'ended' ? ' active' : '') + '">' + tokenHTML(i) +
+      '<div class="nm">' + esc(p.name) + (me ? '<span class="me-tag">나</span>' : '') + (p.skip ? '<span class="tag">한 번 쉬기</span>' : '') + '</div>' +
+      '<div class="pts"><b>' + p.score + '</b>점<small>모은 책 ' + booksOf(S, i) + '권</small></div></div>';
+  }).join('');
+  $('log').innerHTML = S.log.slice(0, 6).map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('');
+  $('chipRoom').hidden = mode !== 'online';
+  $('chipRoom').textContent = '방 ' + S.code;
+  $('chipLevel').textContent = LEVELS[S.level];
+  updateTimer();
+}
+function updateTimer() {
+  if (!S || !S.endsAt) return;
+  var left = Math.max(0, S.endsAt - NOW());
+  var m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
+  var t = $('chipTimer');
+  t.textContent = left > 0 ? (m + ':' + (s < 10 ? '0' : '') + s) : '마지막 차례';
+  t.classList.toggle('low', left < 60000);
+  t.setAttribute('aria-label', '남은 시간 ' + t.textContent);
+}
+
+/* ---------- Modal ---------- */
+function openModal(html) { $('modal').innerHTML = html; $('overlay').hidden = false; }
+function closeModal() { $('overlay').hidden = true; $('modal').innerHTML = ''; }
+function renderModal() {
+  if (animating()) { closeModal(); return; }
+  var p = S.players[S.turn], mine = isMyTurn();
+  if (S.phase === 'quiz' || S.phase === 'result') {
+    var q = QMAP[S.q.id], sq = BOARD[S.q.sq];
+    var kind = S.q.kind === 'bell' ? '독서 골든벨 (+3점)' : '「' + sq.name + '」 칸';
+    var owner = S.q.kind === 'book' ? S.owners[S.q.sq] : null;
+    var ownerNote = S.q.kind === 'book' && owner != null && S.players[owner] && S.phase === 'quiz' ? '<span class="note">' + esc(S.players[owner].name) + '의 책이에요</span>' : '';
+    var html = '<div class="head">' + tokenHTML(S.turn) + '<span class="kind">' + esc(kind) + '</span><span class="cat">' + esc(q.cat) + '</span>' + ownerNote + '</div>' +
+      '<div class="q">' + esc(q.q) + '</div><div class="choices">';
+    S.q.order.forEach(function (oi, k) {
+      var cls = 'choice';
+      if (S.phase === 'result') { if (oi === 0) cls += ' right'; else if (k === S.result.choice) cls += ' wrong'; }
+      var dis = S.phase !== 'quiz' || !mine;
+      html += '<button type="button" class="' + cls + '" data-k="' + k + '"' + (dis ? ' disabled' : '') + '><span class="no">' + (k + 1) + '</span><span>' + esc(q.c[oi]) + '</span></button>';
+    });
+    html += '</div>';
+    if (S.phase === 'result') {
+      html += '<div class="verdict ' + (S.result.correct ? 'ok' : 'no') + '">' + (S.result.correct ? '정답이에요!' : '아쉬워요, 정답은 ' + (S.q.order.indexOf(0) + 1) + '번!') + '<p>' + esc(S.result.msg) + '</p><p>' + esc(q.ex) + '</p></div>';
+    } else if (!mine) {
+      html += '<p class="waiting">' + esc(p.name) + '이(가) 답을 고르고 있어요. 같이 생각해 봐요!</p>';
+    }
+    openModal(html);
+    if (S.phase === 'quiz' && mine) {
+      Array.prototype.forEach.call($('modal').querySelectorAll('.choice'), function (b) { b.addEventListener('click', onAnswer); });
+    }
+  } else if (S.phase === 'card') {
+    var c = CMAP[S.card.id];
+    openModal('<div class="head">' + tokenHTML(S.turn) + '<span class="kind">' + esc(p.name) + '의 책갈피 카드</span></div><div class="bookmark">' + esc(c.text) + '</div><p class="big-msg">' + esc(c.fx) + '</p>');
+  } else if (S.phase === 'notice') {
+    openModal('<div class="head">' + tokenHTML(S.turn) + '<span class="kind">' + esc(S.notice.title) + '</span></div><p class="big-msg">' + esc(p.name) + ': ' + esc(S.notice.text) + '</p>');
+  } else if (S.phase === 'ended') {
+    var medals = ['1등', '2등', '3등', '4등'];
+    var rk = ranking(S), html2 = '<h2 style="font-size:34px;text-align:center">게임 끝! 오늘의 독서왕은?</h2><div class="rank">';
+    rk.forEach(function (r, k) {
+      var titles = []; for (var key in S.owners) { if (S.owners[key] === r.i) titles.push(BOARD[key].name); }
+      html2 += '<div class="rank-row' + (k === 0 ? ' first' : '') + '"><span class="medal">' + medals[k] + '</span>' + tokenHTML(r.i) + '<div><b>' + esc(r.p.name) + '</b><div class="note">' + (titles.length ? esc(titles.join(', ')) : '모은 책 없음') + '</div></div><span class="pts">' + r.p.score + '점</span></div>';
+    });
+    html2 += '</div><div class="actions">';
+    if (isHost()) html2 += '<button class="btn" type="button" id="btnAgain">같은 친구들과 다시 하기</button>';
+    else html2 += '<span class="note" style="align-self:center">방장이 다시 하기를 누르면 새 판이 시작돼요.</span>';
+    html2 += '<button class="btn primary" type="button" id="btnHome">처음으로</button></div>';
+    openModal(html2);
+    $('btnHome').addEventListener('click', leaveRoom);
+    var ba = $('btnAgain'); if (ba) ba.addEventListener('click', onAgain);
+  } else {
+    closeModal();
+  }
+}
+
+/* ---------- Animation ---------- */
+function animating() {
+  if (!S) return false;
+  for (var i = 0; i < S.players.length; i++) { if (shown[i] != null && shown[i] !== S.players[i].pos) return true; }
+  return false;
+}
+function stepAnim() {
+  if (!S) return;
+  var moved = false;
+  S.players.forEach(function (p, i) {
+    if (shown[i] == null) { shown[i] = p.pos; return; }
+    if (shown[i] !== p.pos) {
+      var dist = (p.pos - shown[i] + N) % N;
+      shown[i] = dist > 8 ? p.pos : (shown[i] + 1) % N; moved = true;
+    }
+  });
+  renderBoard();
+  if (!animating()) { clearInterval(animTimer); animTimer = null; renderModal(); schedule(); }
+  return moved;
+}
+function startAnim() {
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) { S.players.forEach(function (p, i) { shown[i] = p.pos; }); return; }
+  if (!animTimer && animating()) animTimer = setInterval(stepAnim, 230);
+}
+
+/* ---------- State updates ---------- */
+function onState(st) {
+  var prevPhase = S ? S.phase : null;
+  S = st;
+  if (S.phase === 'lobby') {
+    closeModal(); showScreen('s-lobby'); renderLobby();
+    shown = {}; return;
+  }
+  if (mode === 'online' && myIndex() < 0) { $('homeErr').textContent = '이 방의 게임에 참여하고 있지 않아요.'; leaveRoom(); return; }
+  showScreen('s-game');
+  if (prevPhase === 'lobby' || prevPhase == null) { shown = {}; S.players.forEach(function (p, i) { shown[i] = p.pos; }); }
+  S.players.forEach(function (p, i) { if (shown[i] == null) shown[i] = p.pos; });
+  startAnim();
+  renderBoard(); renderCenter(); renderSide(); renderModal();
+  schedule();
+}
+
+/* Timed follow-ups run on the device whose turn it is (every turn on a shared device). */
+function schedule() {
+  if (!S || !store || animating()) return;
+  if (!isMyTurn()) return;
+  var ph = S.phase;
+  if (ph !== 'card' && ph !== 'notice' && ph !== 'result') return;
+  var key = S.turnSeq + ':' + ph;
+  if (scheduled[key]) return;
+  scheduled[key] = true;
+  var seq = S.turnSeq, delay = ph === 'result' ? 3600 : 2600;
+  setTimeout(function () {
+    if (!store) return;
+    store.mutate(function (st) { if (!st || st.turnSeq !== seq || st.phase !== ph) return null; return finishTurn(st); }).catch(function () { scheduled[key] = false; });
+  }, delay);
+}
+
+function onRoll() {
+  if (!isMyTurn() || S.phase !== 'roll' || rolling) return;
+  rolling = true; renderCenter();
+  var spin = setInterval(function () { var d = $('dice'); if (d) d.outerHTML = diceHTML(1 + rnd(6), true); }, 90);
+  var roll = 1 + rnd(6), seq = S.turnSeq;
+  setTimeout(function () {
+    clearInterval(spin);
+    store.mutate(function (st) { if (!st || st.phase !== 'roll' || st.turnSeq !== seq) return null; return doRoll(st, roll); })
+      .then(function () { rolling = false; if (S) renderCenter(); })
+      .catch(function () { rolling = false; if (S) renderCenter(); });
+  }, 700);
+}
+function onAnswer(e) {
+  var k = +e.currentTarget.dataset.k, seq = S.turnSeq;
+  Array.prototype.forEach.call($('modal').querySelectorAll('.choice'), function (b) { b.disabled = true; });
+  store.mutate(function (st) { if (!st || st.phase !== 'quiz' || st.turnSeq !== seq) return null; return answer(st, k); }).catch(function () { renderModal(); });
+}
+function onSkip() {
+  var seen = S.updatedAt;
+  store.mutate(function (st) { if (!st || st.updatedAt !== seen || st.phase === 'ended' || st.phase === 'lobby') return null; addLog(st, st.players[st.turn].name + '의 차례를 넘겼어요.'); return finishTurn(st); }).catch(function () {});
+}
+function onAgain() {
+  if (mode === 'local') { store.mutate(function (st) { return startGame(st); }); shown = {}; return; }
+  store.mutate(function (st) { if (!st || st.phase !== 'ended') return null; st.phase = 'lobby'; st.players.forEach(function (p) { p.pos = 0; p.score = 0; p.skip = false; }); st.owners = {}; st.log = []; addLog(st, '새 판을 준비해요.'); return st; }).catch(function () {});
+}
+$('btnQuit').addEventListener('click', function () {
+  if (!S) return;
+  if (S.phase === 'ended') { leaveRoom(); return; }
+  store.mutate(function (st) { if (!st || st.phase === 'ended' || st.phase === 'lobby') return null; st.q = null; st.card = null; st.notice = null; st.result = null; st.phase = 'ended'; addLog(st, '게임을 일찍 마쳤어요.'); return st; }).catch(function () {});
+});
+
+/* Clock: timer chip, stuck check, and time-up when nobody is mid-action */
+setInterval(function () {
+  if (!S || S.phase === 'lobby') return;
+  updateTimer();
+  if (S.phase === 'roll' && S.endsAt && NOW() >= S.endsAt && isMyTurn() && !rolling && !scheduled['end' + S.turnSeq]) {
+    scheduled['end' + S.turnSeq] = true;
+    store.mutate(function (st) { if (!st || st.phase !== 'roll' || NOW() < st.endsAt) return null; st.phase = 'ended'; addLog(st, '시간 끝! 게임이 끝났어요.'); return st; }).catch(function () {});
+  }
+  if (mode === 'online' && S.phase !== 'ended') {
+    var needSkip = NOW() - S.updatedAt > 30000;
+    if (needSkip !== !!$('btnSkip')) renderCenter();
+  }
+}, 500);
+
+/* ---------- Online availability ---------- */
+var OFFLINE_MSG = {
+  config: '여러 태블릿 연결 설정이 아직 안 되어 있어요. 지금은 ‘한 기기로 하기’를 이용해 주세요.',
+  net: '여러 태블릿 연결에 실패했어요. 인터넷 연결을 확인하고 새로 고쳐 주세요. 그동안은 ‘한 기기로 하기’를 이용할 수 있어요.'
+};
+function setOnline(ok, why) {
+  $('btnCreate').disabled = !ok; $('btnJoin').disabled = !ok;
+  $('onlineNote').textContent = ok ? '같은 링크를 연 태블릿끼리 방 번호로 함께 할 수 있어요.' : (OFFLINE_MSG[why] || OFFLINE_MSG.net);
+}
+function initOnline() {
+  var cfg = window.BOOKMARVEL_FIREBASE || {};
+  if (!window.firebase || !cfg.apiKey || !cfg.databaseURL || /붙여/.test(cfg.apiKey)) { setOnline(false, 'config'); return; }
+  try { if (!firebase.apps.length) firebase.initializeApp(cfg); } catch (e) { setOnline(false, 'config'); return; }
+  firebase.auth().signInAnonymously().then(function () {
+    DB = firebase.database();
+    DB.ref('.info/serverTimeOffset').on('value', function (s) { OFFSET = s.val() || 0; });
+    setOnline(true);
+    var saved = ssGet('bm-room');
+    if (saved && !store) {
+      var s = new DbStore(DB, saved);
+      s.ref.once('value').then(function (snap) {
+        var d = snap.val();
+        if (d && d.v && !store && arr(d.players).some(function (p) { return p.id === CLIENT; })) enterRoom(s, 'online');
+      }).catch(function () {});
+    }
+  }).catch(function () { setOnline(false, 'net'); });
+}
+initOnline();
+
+showScreen('s-home');
+})();
+</script>
+</body>
+</html>
